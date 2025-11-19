@@ -19,6 +19,7 @@ class LaraticketsServiceProvider extends PackageServiceProvider
             ->name('laratickets')
             ->hasConfigFile()
             ->hasViews()
+            ->hasRoute('api')
             ->hasMigration('create_ticket_levels_table')
             ->hasMigration('create_departments_table')
             ->hasMigration('create_tickets_table')
