@@ -1,0 +1,77 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\DB;
+
+return new class extends Migration
+{
+    public function up(): void
+    {
+        Schema::create('tickets', function (Blueprint $table) {
+            $table->id();
+            $table->string('subject');
+            $table->text('description');
+
+            // Status and priority
+            $table->string('status')->default('new')->index();
+            $table->string('user_priority')->default('medium')->comment('User requested priority');
+            $table->string('assessed_risk')->nullable()->comment('Risk assessed by Level III/IV');
+
+            // Level management
+            $table->foreignId('current_level_id')->constrained('ticket_levels');
+            $table->foreignId('requested_level_id')->nullable()->constrained('ticket_levels')->comment('For pending escalations');
+
+            // Department
+            $table->foreignId('department_id')->constrained('departments');
+
+            // User references - adaptable to different ID types
+            $this->addUserColumn($table, 'created_by');
+            $this->addUserColumn($table, 'resolved_by', true);
+
+            // Scores and ratings
+            $table->decimal('global_score', 3, 2)->nullable()->comment('Average evaluation score (1-5)');
+            $table->integer('total_evaluations')->default(0);
+
+            // Timestamps and deadlines
+            $table->timestamp('estimated_deadline')->nullable();
+            $table->timestamp('resolved_at')->nullable();
+            $table->timestamp('closed_at')->nullable();
+            $table->timestamps();
+            $table->softDeletes();
+
+            // Indexes for performance
+            $table->index(['status', 'current_level_id']);
+            $table->index(['department_id', 'status']);
+            $table->index('created_by');
+            $table->index('estimated_deadline');
+            $table->index('created_at');
+        });
+    }
+
+    protected function addUserColumn(Blueprint $table, string $columnName, bool $nullable = false): void
+    {
+        $idType = config('laratickets.user.id_type', 'integer');
+
+        $column = match($idType) {
+            'uuid', 'uuid_binary' => $table->uuid($columnName),
+            'ulid' => $table->ulid($columnName),
+            default => $table->unsignedBigInteger($columnName),
+        };
+
+        if ($nullable) {
+            $column->nullable();
+        }
+
+        // Convert to binary for uuid_binary after column creation
+        if ($idType === 'uuid_binary') {
+            DB::statement("ALTER TABLE tickets MODIFY {$columnName} BINARY(16)" . ($nullable ? ' NULL' : ' NOT NULL'));
+        }
+    }
+
+    public function down(): void
+    {
+        Schema::dropIfExists('tickets');
+    }
+};

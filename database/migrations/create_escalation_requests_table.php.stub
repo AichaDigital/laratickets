@@ -1,0 +1,59 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\DB;
+
+return new class extends Migration
+{
+    public function up(): void
+    {
+        Schema::create('escalation_requests', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('ticket_id')->constrained('tickets')->onDelete('cascade');
+            $table->foreignId('from_level_id')->constrained('ticket_levels');
+            $table->foreignId('to_level_id')->constrained('ticket_levels');
+
+            $this->addUserColumn($table, 'requester_id');
+            $this->addUserColumn($table, 'approver_id', true);
+
+            $table->text('justification');
+            $table->string('status')->default('pending')->comment('pending, approved, rejected');
+            $table->text('rejection_reason')->nullable();
+            $table->boolean('is_automatic')->default(false)->comment('Auto-escalation by SLA or risk');
+
+            $table->timestamp('requested_at')->useCurrent();
+            $table->timestamp('resolved_at')->nullable();
+            $table->timestamps();
+
+            $table->index(['ticket_id', 'status']);
+            $table->index('status');
+            $table->index('requested_at');
+        });
+    }
+
+    protected function addUserColumn(Blueprint $table, string $columnName, bool $nullable = false): void
+    {
+        $idType = config('laratickets.user.id_type', 'integer');
+
+        $column = match($idType) {
+            'uuid', 'uuid_binary' => $table->uuid($columnName),
+            'ulid' => $table->ulid($columnName),
+            default => $table->unsignedBigInteger($columnName),
+        };
+
+        if ($nullable) {
+            $column->nullable();
+        }
+
+        if ($idType === 'uuid_binary') {
+            DB::statement("ALTER TABLE escalation_requests MODIFY {$columnName} BINARY(16)" . ($nullable ? ' NULL' : ' NOT NULL'));
+        }
+    }
+
+    public function down(): void
+    {
+        Schema::dropIfExists('escalation_requests');
+    }
+};

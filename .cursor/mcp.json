@@ -1,0 +1,44 @@
+{
+    "mcpServers": {
+        "memory": {
+            "command": "npx",
+            "args": ["-y", "@modelcontextprotocol/server-memory"]
+        },
+        "laratickets-files": {
+            "command": "npx",
+            "args": [
+                "-y",
+                "@modelcontextprotocol/server-filesystem",
+                "/Users/abkrim/development/packages/aichadigital/laratickets"
+            ],
+            "description": "Filesystem access for Laratickets package development"
+        },
+        "laratickets-git": {
+            "command": "npx",
+            "args": [
+                "-y",
+                "@modelcontextprotocol/server-git",
+                "--repository",
+                "/Users/abkrim/development/packages/aichadigital/laratickets"
+            ],
+            "description": "Git operations for Laratickets repository"
+        },
+        "laratickets-memory": {
+            "command": "npx",
+            "args": [
+                "-y",
+                "@modelcontextprotocol/server-memory"
+            ],
+            "description": "Persistent memory for Laratickets architectural decisions and context"
+        },
+        "larafactu-files": {
+            "command": "npx",
+            "args": [
+                "-y",
+                "@modelcontextprotocol/server-filesystem",
+                "/Users/abkrim/SitesLR12/larafactu"
+            ],
+            "description": "Reference to Larafactu project for integration testing"
+        }
+    }
+}
