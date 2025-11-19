@@ -27,11 +27,35 @@ class TestCase extends Orchestra
     public function getEnvironmentSetUp($app)
     {
         config()->set('database.default', 'testing');
+        config()->set('database.connections.testing', [
+            'driver' => 'sqlite',
+            'database' => ':memory:',
+            'prefix' => '',
+        ]);
 
-        /*
-         foreach (\Illuminate\Support\Facades\File::allFiles(__DIR__ . '/../database/migrations') as $migration) {
-            (include $migration->getRealPath())->up();
-         }
-         */
+        // Run migrations
+        $migration = include __DIR__.'/../database/migrations/create_ticket_levels_table.php.stub';
+        $migration->up();
+
+        $migration = include __DIR__.'/../database/migrations/create_departments_table.php.stub';
+        $migration->up();
+
+        $migration = include __DIR__.'/../database/migrations/create_tickets_table.php.stub';
+        $migration->up();
+
+        $migration = include __DIR__.'/../database/migrations/create_ticket_assignments_table.php.stub';
+        $migration->up();
+
+        $migration = include __DIR__.'/../database/migrations/create_escalation_requests_table.php.stub';
+        $migration->up();
+
+        $migration = include __DIR__.'/../database/migrations/create_ticket_evaluations_table.php.stub';
+        $migration->up();
+
+        $migration = include __DIR__.'/../database/migrations/create_agent_ratings_table.php.stub';
+        $migration->up();
+
+        $migration = include __DIR__.'/../database/migrations/create_risk_assessments_table.php.stub';
+        $migration->up();
     }
 }
