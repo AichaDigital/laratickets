@@ -7,7 +7,7 @@
         "laratickets"
     ],
     "homepage": "https://github.com/aichadigital/laratickets",
-    "license": "MIT",
+    "license": "AGPL-3.0-or-later",
     "authors": [
         {
             "name": "Abdelkarim Mateos Sanchez",

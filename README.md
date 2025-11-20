@@ -1,8 +1,11 @@
 # Laratickets - Advanced Support Ticket System for Laravel
 
 [![Latest Version on Packagist](https://img.shields.io/packagist/v/aichadigital/laratickets.svg?style=flat-square)](https://packagist.org/packages/aichadigital/laratickets)
-[![GitHub Tests Action Status](https://img.shields.io/github/actions/workflow/status/aichadigital/laratickets/run-tests.yml?branch=main&label=tests&style=flat-square)](https://github.com/aichadigital/laratickets/actions?query=workflow%3Arun-tests+branch%3Amain)
-[![GitHub Code Style Action Status](https://img.shields.io/github/actions/workflow/status/aichadigital/laratickets/fix-php-code-style-issues.yml?branch=main&label=code%20style&style=flat-square)](https://github.com/aichadigital/laratickets/actions?query=workflow%3A"Fix+PHP+code+style+issues"+branch%3Amain)
+[![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg?style=flat-square)](https://www.gnu.org/licenses/agpl-3.0)
+[![Tests](https://img.shields.io/github/actions/workflow/status/aichadigital/laratickets/run-tests.yml?branch=main&label=tests&style=flat-square)](https://github.com/aichadigital/laratickets/actions/workflows/run-tests.yml)
+[![PHPStan Level 6](https://img.shields.io/github/actions/workflow/status/aichadigital/laratickets/phpstan.yml?branch=main&label=phpstan%20level%206&style=flat-square)](https://github.com/aichadigital/laratickets/actions/workflows/phpstan.yml)
+[![Code Style](https://img.shields.io/github/actions/workflow/status/aichadigital/laratickets/fix-php-code-style-issues.yml?branch=main&label=code%20style&style=flat-square)](https://github.com/aichadigital/laratickets/actions/workflows/fix-php-code-style-issues.yml)
+[![Code Coverage](https://img.shields.io/codecov/c/github/aichadigital/laratickets?style=flat-square)](https://codecov.io/gh/aichadigital/laratickets)
 [![Total Downloads](https://img.shields.io/packagist/dt/aichadigital/laratickets.svg?style=flat-square)](https://packagist.org/packages/aichadigital/laratickets)
 
 A comprehensive support ticket management system for Laravel with 4-level escalation, risk assessment, evaluations, and full RESTful API.
@@ -274,4 +277,8 @@ Please review [our security policy](../../security/policy) on how to report secu
 
 ## License
 
-The MIT License (MIT). Please see [License File](LICENSE.md) for more information.
+This project is licensed under the GNU Affero General Public License v3.0 (AGPL-3.0-or-later). See [LICENSE.md](LICENSE.md) for details.
+
+### Contributor License Agreement
+
+Contributors must agree to our [Contributor License Agreement (CLA)](CLA.md) before their contributions can be accepted. This helps ensure the project remains free and open source.
