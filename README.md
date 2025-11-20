@@ -26,7 +26,7 @@ A comprehensive support ticket management system for Laravel with 4-level escala
 ## Requirements
 
 - PHP 8.4+
-- Laravel 11.x or 12.x
+- Laravel 12.x
 
 ## Installation
 
