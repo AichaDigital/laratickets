@@ -2,10 +2,10 @@
 
 [![Latest Version on Packagist](https://img.shields.io/packagist/v/aichadigital/laratickets.svg?style=flat-square)](https://packagist.org/packages/aichadigital/laratickets)
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg?style=flat-square)](https://www.gnu.org/licenses/agpl-3.0)
-[![Tests](https://img.shields.io/github/actions/workflow/status/aichadigital/laratickets/run-tests.yml?branch=main&label=tests&style=flat-square)](https://github.com/aichadigital/laratickets/actions/workflows/run-tests.yml)
-[![PHPStan](https://img.shields.io/github/actions/workflow/status/aichadigital/laratickets/phpstan.yml?branch=main&label=phpstan&style=flat-square)](https://github.com/aichadigital/laratickets/actions/workflows/phpstan.yml)
-[![Code Style](https://img.shields.io/github/actions/workflow/status/aichadigital/laratickets/fix-php-code-style-issues.yml?branch=main&label=code%20style&style=flat-square)](https://github.com/aichadigital/laratickets/actions/workflows/fix-php-code-style-issues.yml)
-[![Code Coverage](https://img.shields.io/codecov/c/github/aichadigital/laratickets?style=flat-square)](https://codecov.io/gh/aichadigital/laratickets)
+[![Tests](https://img.shields.io/github/actions/workflow/status/AichaDigital/laratickets/run-tests.yml?branch=main&label=tests&style=flat-square)](https://github.com/AichaDigital/laratickets/actions/workflows/run-tests.yml)
+[![PHPStan](https://img.shields.io/github/actions/workflow/status/AichaDigital/laratickets/phpstan.yml?branch=main&label=phpstan&style=flat-square)](https://github.com/AichaDigital/laratickets/actions/workflows/phpstan.yml)
+[![Code Style](https://img.shields.io/github/actions/workflow/status/AichaDigital/laratickets/fix-php-code-style-issues.yml?branch=main&label=code%20style&style=flat-square)](https://github.com/AichaDigital/laratickets/actions/workflows/fix-php-code-style-issues.yml)
+[![Code Coverage](https://img.shields.io/codecov/c/github/AichaDigital/laratickets?style=flat-square)](https://codecov.io/gh/AichaDigital/laratickets)
 [![Total Downloads](https://img.shields.io/packagist/dt/aichadigital/laratickets.svg?style=flat-square)](https://packagist.org/packages/aichadigital/laratickets)
 
 A comprehensive support ticket management system for Laravel with 4-level escalation, risk assessment, evaluations, and full RESTful API.
