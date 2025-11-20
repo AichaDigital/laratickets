@@ -8,8 +8,19 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+/**
+ * @property int $id
+ * @property int $ticket_id
+ * @property int $evaluator_id
+ * @property float $score
+ * @property string|null $comment
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read Ticket $ticket
+ */
 class TicketEvaluation extends Model
 {
+    /** @use HasFactory<*> */
     use HasFactory;
 
     protected $fillable = [

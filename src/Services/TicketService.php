@@ -19,6 +19,12 @@ class TicketService
         protected TicketAuthorizationContract $authorization
     ) {}
 
+    /**
+     * Create a new ticket
+     *
+     * @param  array<string, mixed>  $data
+     * @param  mixed  $creator  User model instance (type is configurable via config('laratickets.user.model'))
+     */
     public function createTicket(array $data, $creator): Ticket
     {
         if (! $this->authorization->canCreateTicket($creator)) {
@@ -45,6 +51,11 @@ class TicketService
         });
     }
 
+    /**
+     * Update ticket status
+     *
+     * @param  mixed  $user  User model instance (type is configurable via config('laratickets.user.model'))
+     */
     public function updateTicketStatus(Ticket $ticket, TicketStatus $newStatus, $user): Ticket
     {
         if (! $this->authorization->canUpdateTicket($user, $ticket)) {
@@ -64,6 +75,11 @@ class TicketService
         return $ticket->fresh();
     }
 
+    /**
+     * Close a ticket
+     *
+     * @param  mixed  $resolver  User model instance (type is configurable via config('laratickets.user.model'))
+     */
     public function closeTicket(Ticket $ticket, $resolver): Ticket
     {
         if (! $this->authorization->canCloseTicket($resolver, $ticket)) {
@@ -86,6 +102,11 @@ class TicketService
         });
     }
 
+    /**
+     * Resolve a ticket
+     *
+     * @param  mixed  $resolver  User model instance (type is configurable via config('laratickets.user.model'))
+     */
     public function resolveTicket(Ticket $ticket, $resolver): Ticket
     {
         if (! $this->authorization->canUpdateTicket($resolver, $ticket)) {
@@ -101,6 +122,11 @@ class TicketService
         return $ticket->fresh();
     }
 
+    /**
+     * Cancel a ticket
+     *
+     * @param  mixed  $user  User model instance (type is configurable via config('laratickets.user.model'))
+     */
     public function cancelTicket(Ticket $ticket, $user, ?string $reason = null): Ticket
     {
         if (! $this->authorization->canUpdateTicket($user, $ticket)) {

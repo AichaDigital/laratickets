@@ -15,6 +15,9 @@ use Illuminate\Support\Collection;
  */
 class BasicUserCapabilityHandler implements UserCapabilityContract
 {
+    /**
+     * @param  mixed  $user  User model instance (type is configurable via config('laratickets.user.model'))
+     */
     public function getUserLevel($user): ?TicketLevel
     {
         // Basic implementation: returns null (no level assigned)
@@ -22,6 +25,10 @@ class BasicUserCapabilityHandler implements UserCapabilityContract
         return null;
     }
 
+    /**
+     * @param  mixed  $user  User model instance (type is configurable via config('laratickets.user.model'))
+     * @return Collection<int, \AichaDigital\Laratickets\Models\Department>
+     */
     public function getUserDepartments($user): Collection
     {
         // Basic implementation: returns empty collection
@@ -29,6 +36,9 @@ class BasicUserCapabilityHandler implements UserCapabilityContract
         return collect([]);
     }
 
+    /**
+     * @param  mixed  $user  User model instance (type is configurable via config('laratickets.user.model'))
+     */
     public function canUserEscalateTo($user, TicketLevel $targetLevel): bool
     {
         // Basic implementation: all users can escalate to any level
@@ -36,6 +46,10 @@ class BasicUserCapabilityHandler implements UserCapabilityContract
         return true;
     }
 
+    /**
+     * @param  mixed  $user  User model instance (type is configurable via config('laratickets.user.model'))
+     * @return Collection<int, \AichaDigital\Laratickets\Models\Ticket>
+     */
     public function getUserAssignedTickets($user): Collection
     {
         $userId = $user->{config('laratickets.user.id_column', 'id')};

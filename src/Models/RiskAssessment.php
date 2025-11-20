@@ -9,8 +9,19 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+/**
+ * @property int $id
+ * @property int $ticket_id
+ * @property int $assessor_id
+ * @property RiskLevel $risk_level
+ * @property string $justification
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read Ticket $ticket
+ */
 class RiskAssessment extends Model
 {
+    /** @use HasFactory<*> */
     use HasFactory;
 
     protected $fillable = [

@@ -21,6 +21,9 @@ class DefaultNotificationHandler implements NotificationContract
         Log::info('Ticket created', ['ticket_id' => $ticket->id]);
     }
 
+    /**
+     * @param  mixed  $user  User model instance (type is configurable via config('laratickets.user.model'))
+     */
     public function notifyTicketAssigned(Ticket $ticket, $user): void
     {
         if (! config('laratickets.notifications.enabled', true)) {
@@ -69,6 +72,9 @@ class DefaultNotificationHandler implements NotificationContract
         Log::info('Ticket closed', ['ticket_id' => $ticket->id]);
     }
 
+    /**
+     * @param  mixed  $user  User model instance (type is configurable via config('laratickets.user.model'))
+     */
     public function notifyEvaluationReceived($user, TicketEvaluation $evaluation): void
     {
         if (! config('laratickets.notifications.enabled', true)) {

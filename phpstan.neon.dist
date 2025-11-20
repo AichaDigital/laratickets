@@ -2,11 +2,18 @@ includes:
     - phpstan-baseline.neon
 
 parameters:
-    level: 5
+    level: 6
     paths:
         - src
-        - config
-        - database
+        - database/migrations
     tmpDir: build/phpstan
     checkOctaneCompatibility: true
     checkModelProperties: true
+    reportUnmatchedIgnoredErrors: false
+
+    excludePaths:
+        - config/*
+
+    ignoreErrors:
+        # Ignore stub migration files type issues
+        - '#Offset .* on .* in migration always exists and is not nullable#'

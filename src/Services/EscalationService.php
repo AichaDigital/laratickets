@@ -20,6 +20,11 @@ class EscalationService
         protected TicketAuthorizationContract $authorization
     ) {}
 
+    /**
+     * Request escalation of a ticket
+     *
+     * @param  mixed  $requester  User model instance (type is configurable via config('laratickets.user.model'))
+     */
     public function requestEscalation(
         Ticket $ticket,
         TicketLevel $targetLevel,
@@ -61,6 +66,11 @@ class EscalationService
         });
     }
 
+    /**
+     * Approve an escalation request
+     *
+     * @param  mixed  $approver  User model instance (type is configurable via config('laratickets.user.model'))
+     */
     public function approveEscalation(EscalationRequest $request, $approver): EscalationRequest
     {
         if (! $this->authorization->canApproveEscalation($approver, $request)) {
@@ -90,6 +100,11 @@ class EscalationService
         });
     }
 
+    /**
+     * Reject an escalation request
+     *
+     * @param  mixed  $approver  User model instance (type is configurable via config('laratickets.user.model'))
+     */
     public function rejectEscalation(EscalationRequest $request, $approver, string $reason): EscalationRequest
     {
         if (! $this->authorization->canApproveEscalation($approver, $request)) {

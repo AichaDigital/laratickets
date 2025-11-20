@@ -8,8 +8,28 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+/**
+ * @property int $id
+ * @property int $ticket_id
+ * @property int $from_level_id
+ * @property int $to_level_id
+ * @property int $requester_id
+ * @property int|null $approver_id
+ * @property string $justification
+ * @property string $status
+ * @property string|null $rejection_reason
+ * @property bool $is_automatic
+ * @property \Illuminate\Support\Carbon|null $requested_at
+ * @property \Illuminate\Support\Carbon|null $resolved_at
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read Ticket $ticket
+ * @property-read TicketLevel $fromLevel
+ * @property-read TicketLevel $toLevel
+ */
 class EscalationRequest extends Model
 {
+    /** @use HasFactory<*> */
     use HasFactory;
 
     protected $fillable = [

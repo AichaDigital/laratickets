@@ -21,6 +21,11 @@ class RiskAssessmentService
         protected EscalationService $escalationService
     ) {}
 
+    /**
+     * Assess risk for a ticket
+     *
+     * @param  mixed  $assessor  User model instance (type is configurable via config('laratickets.user.model'))
+     */
     public function assessRisk(
         Ticket $ticket,
         $assessor,
@@ -65,6 +70,11 @@ class RiskAssessmentService
         });
     }
 
+    /**
+     * Check if user can assess risk
+     *
+     * @param  mixed  $user  User model instance (type is configurable via config('laratickets.user.model'))
+     */
     public function canUserAssessRisk($user): bool
     {
         if (! config('laratickets.risk_assessment.enabled', true)) {
@@ -77,6 +87,11 @@ class RiskAssessmentService
         return $userLevel && in_array($userLevel->level, $requiredLevels);
     }
 
+    /**
+     * Get high risk tickets
+     *
+     * @return Collection<int, \AichaDigital\Laratickets\Models\Ticket>
+     */
     public function getHighRiskTickets(): Collection
     {
         return Ticket::highRisk()
@@ -84,6 +99,11 @@ class RiskAssessmentService
             ->get();
     }
 
+    /**
+     * Get critical risk tickets
+     *
+     * @return Collection<int, \AichaDigital\Laratickets\Models\Ticket>
+     */
     public function getCriticalRiskTickets(): Collection
     {
         return Ticket::where('assessed_risk', RiskLevel::CRITICAL)
@@ -91,6 +111,11 @@ class RiskAssessmentService
             ->get();
     }
 
+    /**
+     * Escalate ticket by risk
+     *
+     * @param  mixed  $assessor  User model instance (type is configurable via config('laratickets.user.model'))
+     */
     public function escalateByRisk(Ticket $ticket, $assessor): void
     {
         if (! $ticket->currentLevel->can_escalate) {
@@ -124,6 +149,11 @@ class RiskAssessmentService
         }
     }
 
+    /**
+     * Get risk assessment statistics
+     *
+     * @return array<string, mixed>
+     */
     public function getRiskStatistics(): array
     {
         return [
@@ -139,6 +169,11 @@ class RiskAssessmentService
         ];
     }
 
+    /**
+     * Get risk assessment history for a ticket
+     *
+     * @return Collection<int, \AichaDigital\Laratickets\Models\RiskAssessment>
+     */
     public function getTicketRiskHistory(Ticket $ticket): Collection
     {
         return $ticket->riskAssessments()

@@ -13,6 +13,9 @@ class EvaluateTicketRequest extends FormRequest
         return true;
     }
 
+    /**
+     * @return array<string, array<int, mixed>>
+     */
     public function rules(): array
     {
         $minScore = config('laratickets.evaluation.min_score', 1.0);
@@ -24,6 +27,9 @@ class EvaluateTicketRequest extends FormRequest
         ];
     }
 
+    /**
+     * @return array<string, string>
+     */
     public function messages(): array
     {
         return [

@@ -17,6 +17,8 @@ interface NotificationContract
 
     /**
      * Notify when a ticket is assigned to a user
+     *
+     * @param  mixed  $user  User model instance (type is configurable via config('laratickets.user.model'))
      */
     public function notifyTicketAssigned(Ticket $ticket, $user): void;
 
@@ -42,6 +44,8 @@ interface NotificationContract
 
     /**
      * Notify when an evaluation is received
+     *
+     * @param  mixed  $user  User model instance (type is configurable via config('laratickets.user.model'))
      */
     public function notifyEvaluationReceived($user, TicketEvaluation $evaluation): void;
 

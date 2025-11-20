@@ -13,8 +13,33 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
+/**
+ * @property int $id
+ * @property string $subject
+ * @property string $description
+ * @property TicketStatus $status
+ * @property Priority $user_priority
+ * @property RiskLevel|null $assessed_risk
+ * @property int $current_level_id
+ * @property int|null $requested_level_id
+ * @property int $department_id
+ * @property int $created_by
+ * @property int|null $resolved_by
+ * @property float|null $global_score
+ * @property int $total_evaluations
+ * @property \Illuminate\Support\Carbon|null $estimated_deadline
+ * @property \Illuminate\Support\Carbon|null $resolved_at
+ * @property \Illuminate\Support\Carbon|null $closed_at
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property \Illuminate\Support\Carbon|null $deleted_at
+ * @property-read TicketLevel $currentLevel
+ * @property-read TicketLevel|null $requestedLevel
+ * @property-read Department $department
+ */
 class Ticket extends Model
 {
+    /** @use HasFactory<*> */
     use HasFactory, SoftDeletes;
 
     protected $fillable = [

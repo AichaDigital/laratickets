@@ -9,6 +9,7 @@ use AichaDigital\Laratickets\Events\AgentRated;
 use AichaDigital\Laratickets\Events\TicketEvaluated;
 use AichaDigital\Laratickets\Models\AgentRating;
 use AichaDigital\Laratickets\Models\Ticket;
+use AichaDigital\Laratickets\Models\TicketAssignment;
 use AichaDigital\Laratickets\Models\TicketEvaluation;
 use Illuminate\Support\Facades\DB;
 
@@ -18,6 +19,11 @@ class EvaluationService
         protected TicketAuthorizationContract $authorization
     ) {}
 
+    /**
+     * Evaluate a ticket
+     *
+     * @param  mixed  $evaluator  User model instance (type is configurable via config('laratickets.user.model'))
+     */
     public function evaluateTicket(
         Ticket $ticket,
         $evaluator,
@@ -61,6 +67,12 @@ class EvaluationService
         });
     }
 
+    /**
+     * Rate an agent
+     *
+     * @param  mixed  $agent  Agent user model instance (type is configurable via config('laratickets.user.model'))
+     * @param  mixed  $rater  Rater user model instance (type is configurable via config('laratickets.user.model'))
+     */
     public function rateAgent(
         Ticket $ticket,
         $agent,
@@ -129,6 +141,11 @@ class EvaluationService
         });
     }
 
+    /**
+     * Calculate average rating for an agent
+     *
+     * @param  mixed  $agent  Agent user model instance (type is configurable via config('laratickets.user.model'))
+     */
     public function calculateAgentAverageRating($agent): float
     {
         $agentId = $agent->{config('laratickets.user.id_column', 'id')};
@@ -137,6 +154,11 @@ class EvaluationService
             ->avg('score') ?? 0.0;
     }
 
+    /**
+     * Get ticket evaluation statistics
+     *
+     * @return array<string, mixed>
+     */
     public function getTicketStatistics(): array
     {
         return [
@@ -149,6 +171,12 @@ class EvaluationService
         ];
     }
 
+    /**
+     * Get statistics for an agent
+     *
+     * @param  mixed  $agent  Agent user model instance (type is configurable via config('laratickets.user.model'))
+     * @return array<string, mixed>
+     */
     public function getAgentStatistics($agent): array
     {
         $agentId = $agent->{config('laratickets.user.id_column', 'id')};

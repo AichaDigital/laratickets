@@ -4,11 +4,18 @@ declare(strict_types=1);
 
 namespace AichaDigital\Laratickets\Http\Resources;
 
+use AichaDigital\Laratickets\Models\AgentRating;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
+/**
+ * @mixin AgentRating
+ */
 class AgentRatingResource extends JsonResource
 {
+    /**
+     * @return array<string, mixed>
+     */
     public function toArray(Request $request): array
     {
         return [

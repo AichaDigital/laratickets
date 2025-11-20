@@ -21,6 +21,12 @@ class AssignmentService
         protected UserCapabilityContract $userCapability
     ) {}
 
+    /**
+     * Assign an agent to a ticket
+     *
+     * @param  mixed  $agent  Agent user model instance (type is configurable via config('laratickets.user.model'))
+     * @param  mixed|null  $assigner  User model instance (type is configurable via config('laratickets.user.model'))
+     */
     public function assignAgent(Ticket $ticket, $agent, $assigner = null): TicketAssignment
     {
         if ($assigner && ! $this->authorization->canUpdateTicket($assigner, $ticket)) {
@@ -68,6 +74,11 @@ class AssignmentService
         });
     }
 
+    /**
+     * Unassign an agent from a ticket
+     *
+     * @param  mixed  $agent  Agent user model instance (type is configurable via config('laratickets.user.model'))
+     */
     public function unassignAgent(Ticket $ticket, $agent): void
     {
         $assignment = $ticket->activeAssignments()
@@ -81,6 +92,11 @@ class AssignmentService
         $assignment->complete();
     }
 
+    /**
+     * Get available agents for a level
+     *
+     * @return Collection<int, mixed>
+     */
     public function getAvailableAgentsForLevel(TicketLevel $level): Collection
     {
         // This method should be implemented by the application
@@ -133,6 +149,13 @@ class AssignmentService
         return $this->assignAgent($ticket, $agent);
     }
 
+    /**
+     * Reassign a ticket from one agent to another
+     *
+     * @param  mixed  $oldAgent  Old agent user model instance (type is configurable via config('laratickets.user.model'))
+     * @param  mixed  $newAgent  New agent user model instance (type is configurable via config('laratickets.user.model'))
+     * @param  mixed  $assigner  User model instance (type is configurable via config('laratickets.user.model'))
+     */
     public function reassignTicket(Ticket $ticket, $oldAgent, $newAgent, $assigner): TicketAssignment
     {
         if (! $this->authorization->canUpdateTicket($assigner, $ticket)) {

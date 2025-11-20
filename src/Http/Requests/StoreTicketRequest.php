@@ -15,6 +15,9 @@ class StoreTicketRequest extends FormRequest
         return true; // Authorization handled by controller/middleware
     }
 
+    /**
+     * @return array<string, array<int, mixed>>
+     */
     public function rules(): array
     {
         return [
@@ -25,6 +28,9 @@ class StoreTicketRequest extends FormRequest
         ];
     }
 
+    /**
+     * @return array<string, string>
+     */
     public function messages(): array
     {
         return [

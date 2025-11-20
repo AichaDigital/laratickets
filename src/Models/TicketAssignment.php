@@ -8,8 +8,20 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+/**
+ * @property int $id
+ * @property int $ticket_id
+ * @property int $user_id
+ * @property \Illuminate\Support\Carbon|null $assigned_at
+ * @property \Illuminate\Support\Carbon|null $completed_at
+ * @property float|null $individual_rating
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read Ticket $ticket
+ */
 class TicketAssignment extends Model
 {
+    /** @use HasFactory<*> */
     use HasFactory;
 
     protected $fillable = [
