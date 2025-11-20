@@ -1,5 +1,13 @@
 # Laratickets - Advanced Support Ticket System for Laravel
 
+> **⚠️ ALPHA VERSION - IN ACTIVE DEVELOPMENT**
+>
+> This package is currently in alpha stage and under active development. The API and features may change significantly before the first stable release. **Not recommended for production use yet.**
+>
+> - Current Status: Pre-release (v0.x)
+> - Expected Stable Release: TBD
+> - Contributions and feedback welcome!
+
 [![Latest Version on Packagist](https://img.shields.io/packagist/v/aichadigital/laratickets.svg?style=flat-square)](https://packagist.org/packages/aichadigital/laratickets)
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg?style=flat-square)](https://www.gnu.org/licenses/agpl-3.0)
 [![Tests](https://img.shields.io/github/actions/workflow/status/AichaDigital/laratickets/run-tests.yml?branch=main&label=tests&style=flat-square)](https://github.com/AichaDigital/laratickets/actions/workflows/run-tests.yml)
