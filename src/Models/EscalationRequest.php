@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace AichaDigital\Laratickets\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -29,7 +30,6 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  */
 class EscalationRequest extends Model
 {
-    /** @use HasFactory<*> */
     use HasFactory;
 
     protected $fillable = [
@@ -52,42 +52,71 @@ class EscalationRequest extends Model
         'resolved_at' => 'datetime',
     ];
 
+    /**
+     * @return BelongsTo<Ticket, EscalationRequest>
+     */
     public function ticket(): BelongsTo
     {
         return $this->belongsTo(Ticket::class);
     }
 
+    /**
+     * @return BelongsTo<TicketLevel, EscalationRequest>
+     */
     public function fromLevel(): BelongsTo
     {
         return $this->belongsTo(TicketLevel::class, 'from_level_id');
     }
 
+    /**
+     * @return BelongsTo<TicketLevel, EscalationRequest>
+     */
     public function toLevel(): BelongsTo
     {
         return $this->belongsTo(TicketLevel::class, 'to_level_id');
     }
 
-    public function scopePending($query)
+    /**
+     * @param  Builder<EscalationRequest>  $query
+     * @return Builder<EscalationRequest>
+     */
+    public function scopePending(Builder $query): Builder
     {
         return $query->where('status', 'pending');
     }
 
-    public function scopeApproved($query)
+    /**
+     * @param  Builder<EscalationRequest>  $query
+     * @return Builder<EscalationRequest>
+     */
+    public function scopeApproved(Builder $query): Builder
     {
         return $query->where('status', 'approved');
     }
 
-    public function scopeRejected($query)
+    /**
+     * @param  Builder<EscalationRequest>  $query
+     * @return Builder<EscalationRequest>
+     */
+    public function scopeRejected(Builder $query): Builder
     {
         return $query->where('status', 'rejected');
     }
 
-    public function scopeAutomatic($query)
+    /**
+     * @param  Builder<EscalationRequest>  $query
+     * @return Builder<EscalationRequest>
+     */
+    public function scopeAutomatic(Builder $query): Builder
     {
         return $query->where('is_automatic', true);
     }
 
-    public function scopeManual($query)
+    /**
+     * @param  Builder<EscalationRequest>  $query
+     * @return Builder<EscalationRequest>
+     */
+    public function scopeManual(Builder $query): Builder
     {
         return $query->where('is_automatic', false);
     }
@@ -107,7 +136,7 @@ class EscalationRequest extends Model
         return $this->status === 'rejected';
     }
 
-    public function approve($approverId): void
+    public function approve(int $approverId): void
     {
         $this->update([
             'status' => 'approved',
@@ -116,7 +145,7 @@ class EscalationRequest extends Model
         ]);
     }
 
-    public function reject($approverId, string $reason): void
+    public function reject(int $approverId, string $reason): void
     {
         $this->update([
             'status' => 'rejected',

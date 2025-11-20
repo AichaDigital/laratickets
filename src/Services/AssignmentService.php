@@ -48,8 +48,10 @@ class AssignmentService
             }
         }
 
-        return DB::transaction(function () use ($ticket, $agent) {
+        /** @var TicketAssignment $result */
+        $result = DB::transaction(function () use ($ticket, $agent): TicketAssignment {
             // Check if already assigned
+            /** @var TicketAssignment|null $existing */
             $existing = $ticket->activeAssignments()
                 ->where('user_id', $agent->{config('laratickets.user.id_column', 'id')})
                 ->first();
@@ -58,6 +60,7 @@ class AssignmentService
                 return $existing;
             }
 
+            /** @var TicketAssignment $assignment */
             $assignment = TicketAssignment::create([
                 'ticket_id' => $ticket->id,
                 'user_id' => $agent->{config('laratickets.user.id_column', 'id')},
@@ -72,6 +75,8 @@ class AssignmentService
 
             return $assignment;
         });
+
+        return $result;
     }
 
     /**
@@ -81,6 +86,7 @@ class AssignmentService
      */
     public function unassignAgent(Ticket $ticket, $agent): void
     {
+        /** @var TicketAssignment|null $assignment */
         $assignment = $ticket->activeAssignments()
             ->where('user_id', $agent->{config('laratickets.user.id_column', 'id')})
             ->first();

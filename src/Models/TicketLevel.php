@@ -22,7 +22,6 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  */
 class TicketLevel extends Model
 {
-    /** @use HasFactory<*> */
     use HasFactory;
 
     protected $fillable = [
@@ -43,21 +42,33 @@ class TicketLevel extends Model
         'active' => 'boolean',
     ];
 
+    /**
+     * @return HasMany<Ticket, TicketLevel>
+     */
     public function tickets(): HasMany
     {
         return $this->hasMany(Ticket::class, 'current_level_id');
     }
 
+    /**
+     * @return HasMany<Ticket, TicketLevel>
+     */
     public function pendingEscalationTickets(): HasMany
     {
         return $this->hasMany(Ticket::class, 'requested_level_id');
     }
 
+    /**
+     * @return HasMany<EscalationRequest, TicketLevel>
+     */
     public function escalationsFrom(): HasMany
     {
         return $this->hasMany(EscalationRequest::class, 'from_level_id');
     }
 
+    /**
+     * @return HasMany<EscalationRequest, TicketLevel>
+     */
     public function escalationsTo(): HasMany
     {
         return $this->hasMany(EscalationRequest::class, 'to_level_id');

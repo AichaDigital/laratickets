@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace AichaDigital\Laratickets\Models;
 
 use AichaDigital\Laratickets\Enums\RiskLevel;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -21,7 +22,6 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  */
 class RiskAssessment extends Model
 {
-    /** @use HasFactory<*> */
     use HasFactory;
 
     protected $fillable = [
@@ -35,22 +35,37 @@ class RiskAssessment extends Model
         'risk_level' => RiskLevel::class,
     ];
 
+    /**
+     * @return BelongsTo<Ticket, RiskAssessment>
+     */
     public function ticket(): BelongsTo
     {
         return $this->belongsTo(Ticket::class);
     }
 
-    public function scopeCritical($query)
+    /**
+     * @param  Builder<RiskAssessment>  $query
+     * @return Builder<RiskAssessment>
+     */
+    public function scopeCritical(Builder $query): Builder
     {
         return $query->where('risk_level', RiskLevel::CRITICAL);
     }
 
-    public function scopeHigh($query)
+    /**
+     * @param  Builder<RiskAssessment>  $query
+     * @return Builder<RiskAssessment>
+     */
+    public function scopeHigh(Builder $query): Builder
     {
         return $query->where('risk_level', RiskLevel::HIGH);
     }
 
-    public function scopeHighOrCritical($query)
+    /**
+     * @param  Builder<RiskAssessment>  $query
+     * @return Builder<RiskAssessment>
+     */
+    public function scopeHighOrCritical(Builder $query): Builder
     {
         return $query->whereIn('risk_level', [RiskLevel::HIGH, RiskLevel::CRITICAL]);
     }

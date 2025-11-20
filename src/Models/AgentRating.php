@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace AichaDigital\Laratickets\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -21,7 +22,6 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  */
 class AgentRating extends Model
 {
-    /** @use HasFactory<*> */
     use HasFactory;
 
     protected $fillable = [
@@ -36,22 +36,37 @@ class AgentRating extends Model
         'score' => 'decimal:2',
     ];
 
+    /**
+     * @return BelongsTo<Ticket, AgentRating>
+     */
     public function ticket(): BelongsTo
     {
         return $this->belongsTo(Ticket::class);
     }
 
-    public function scopeForAgent($query, $agentId)
+    /**
+     * @param  Builder<AgentRating>  $query
+     * @return Builder<AgentRating>
+     */
+    public function scopeForAgent(Builder $query, int $agentId): Builder
     {
         return $query->where('agent_id', $agentId);
     }
 
-    public function scopeHighRated($query)
+    /**
+     * @param  Builder<AgentRating>  $query
+     * @return Builder<AgentRating>
+     */
+    public function scopeHighRated(Builder $query): Builder
     {
         return $query->where('score', '>=', 4.0);
     }
 
-    public function scopeLowRated($query)
+    /**
+     * @param  Builder<AgentRating>  $query
+     * @return Builder<AgentRating>
+     */
+    public function scopeLowRated(Builder $query): Builder
     {
         return $query->where('score', '<=', 2.0);
     }

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace AichaDigital\Laratickets\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -20,7 +21,6 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  */
 class TicketEvaluation extends Model
 {
-    /** @use HasFactory<*> */
     use HasFactory;
 
     protected $fillable = [
@@ -34,17 +34,28 @@ class TicketEvaluation extends Model
         'score' => 'decimal:2',
     ];
 
+    /**
+     * @return BelongsTo<Ticket, TicketEvaluation>
+     */
     public function ticket(): BelongsTo
     {
         return $this->belongsTo(Ticket::class);
     }
 
-    public function scopeHighRated($query)
+    /**
+     * @param  Builder<TicketEvaluation>  $query
+     * @return Builder<TicketEvaluation>
+     */
+    public function scopeHighRated(Builder $query): Builder
     {
         return $query->where('score', '>=', 4.0);
     }
 
-    public function scopeLowRated($query)
+    /**
+     * @param  Builder<TicketEvaluation>  $query
+     * @return Builder<TicketEvaluation>
+     */
+    public function scopeLowRated(Builder $query): Builder
     {
         return $query->where('score', '<=', 2.0);
     }

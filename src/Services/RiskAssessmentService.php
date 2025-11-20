@@ -138,6 +138,7 @@ class RiskAssessmentService
         );
 
         // Auto-approve since it's system-initiated
+        /** @var \AichaDigital\Laratickets\Models\EscalationRequest|null $latestEscalation */
         $latestEscalation = $ticket->escalationRequests()
             ->where('is_automatic', true)
             ->where('status', 'pending')
@@ -172,13 +173,15 @@ class RiskAssessmentService
     /**
      * Get risk assessment history for a ticket
      *
-     * @return Collection<int, \AichaDigital\Laratickets\Models\RiskAssessment>
+     * @return Collection<int, RiskAssessment>
      */
     public function getTicketRiskHistory(Ticket $ticket): Collection
     {
-        return $ticket->riskAssessments()
-            ->with('assessor')
+        /** @var Collection<int, RiskAssessment> $assessments */
+        $assessments = $ticket->riskAssessments()
             ->orderBy('created_at', 'desc')
             ->get();
+
+        return $assessments;
     }
 }

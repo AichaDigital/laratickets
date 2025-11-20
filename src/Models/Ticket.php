@@ -7,6 +7,7 @@ namespace AichaDigital\Laratickets\Models;
 use AichaDigital\Laratickets\Enums\Priority;
 use AichaDigital\Laratickets\Enums\RiskLevel;
 use AichaDigital\Laratickets\Enums\TicketStatus;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -39,8 +40,8 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  */
 class Ticket extends Model
 {
-    /** @use HasFactory<*> */
-    use HasFactory, SoftDeletes;
+    use HasFactory;
+    use SoftDeletes;
 
     protected $fillable = [
         'subject',
@@ -72,58 +73,91 @@ class Ticket extends Model
     ];
 
     // Relationships
+    /**
+     * @return BelongsTo<TicketLevel, Ticket>
+     */
     public function currentLevel(): BelongsTo
     {
         return $this->belongsTo(TicketLevel::class, 'current_level_id');
     }
 
+    /**
+     * @return BelongsTo<TicketLevel, Ticket>
+     */
     public function requestedLevel(): BelongsTo
     {
         return $this->belongsTo(TicketLevel::class, 'requested_level_id');
     }
 
+    /**
+     * @return BelongsTo<Department, Ticket>
+     */
     public function department(): BelongsTo
     {
         return $this->belongsTo(Department::class);
     }
 
+    /**
+     * @return HasMany<TicketAssignment, Ticket>
+     */
     public function assignments(): HasMany
     {
         return $this->hasMany(TicketAssignment::class);
     }
 
+    /**
+     * @return HasMany<TicketAssignment, Ticket>
+     */
     public function activeAssignments(): HasMany
     {
         return $this->hasMany(TicketAssignment::class)
             ->whereNull('completed_at');
     }
 
+    /**
+     * @return HasMany<EscalationRequest, Ticket>
+     */
     public function escalationRequests(): HasMany
     {
         return $this->hasMany(EscalationRequest::class);
     }
 
+    /**
+     * @return HasMany<EscalationRequest, Ticket>
+     */
     public function pendingEscalations(): HasMany
     {
         return $this->hasMany(EscalationRequest::class)
             ->where('status', 'pending');
     }
 
+    /**
+     * @return HasMany<TicketEvaluation, Ticket>
+     */
     public function evaluations(): HasMany
     {
         return $this->hasMany(TicketEvaluation::class);
     }
 
+    /**
+     * @return HasMany<AgentRating, Ticket>
+     */
     public function agentRatings(): HasMany
     {
         return $this->hasMany(AgentRating::class);
     }
 
+    /**
+     * @return HasMany<RiskAssessment, Ticket>
+     */
     public function riskAssessments(): HasMany
     {
         return $this->hasMany(RiskAssessment::class);
     }
 
+    /**
+     * @return HasMany<RiskAssessment, Ticket>
+     */
     public function latestRiskAssessment(): HasMany
     {
         return $this->hasMany(RiskAssessment::class)
@@ -131,7 +165,11 @@ class Ticket extends Model
     }
 
     // Scopes
-    public function scopeOpen($query)
+    /**
+     * @param  Builder<Ticket>  $query
+     * @return Builder<Ticket>
+     */
+    public function scopeOpen(Builder $query): Builder
     {
         return $query->whereIn('status', [
             TicketStatus::NEW,
@@ -142,7 +180,11 @@ class Ticket extends Model
         ]);
     }
 
-    public function scopeClosed($query)
+    /**
+     * @param  Builder<Ticket>  $query
+     * @return Builder<Ticket>
+     */
+    public function scopeClosed(Builder $query): Builder
     {
         return $query->whereIn('status', [
             TicketStatus::RESOLVED,
@@ -151,26 +193,42 @@ class Ticket extends Model
         ]);
     }
 
-    public function scopeByLevel($query, int $level)
+    /**
+     * @param  Builder<Ticket>  $query
+     * @return Builder<Ticket>
+     */
+    public function scopeByLevel(Builder $query, int $level): Builder
     {
         return $query->whereHas('currentLevel', function ($q) use ($level) {
             $q->where('level', $level);
         });
     }
 
-    public function scopeByDepartment($query, int $departmentId)
+    /**
+     * @param  Builder<Ticket>  $query
+     * @return Builder<Ticket>
+     */
+    public function scopeByDepartment(Builder $query, int $departmentId): Builder
     {
         return $query->where('department_id', $departmentId);
     }
 
-    public function scopeOverdue($query)
+    /**
+     * @param  Builder<Ticket>  $query
+     * @return Builder<Ticket>
+     */
+    public function scopeOverdue(Builder $query): Builder
     {
         return $query->whereNotNull('estimated_deadline')
             ->where('estimated_deadline', '<', now())
             ->open();
     }
 
-    public function scopeHighRisk($query)
+    /**
+     * @param  Builder<Ticket>  $query
+     * @return Builder<Ticket>
+     */
+    public function scopeHighRisk(Builder $query): Builder
     {
         return $query->where('assessed_risk', RiskLevel::HIGH)
             ->orWhere('assessed_risk', RiskLevel::CRITICAL);
