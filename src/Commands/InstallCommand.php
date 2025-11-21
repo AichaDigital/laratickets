@@ -18,6 +18,7 @@ class InstallCommand extends Command
 
     protected $description = 'Install Laratickets package';
 
+    /** @var array<string, string> */
     protected array $migrationOrder = [
         '001' => 'create_ticket_levels_table',
         '002' => 'create_departments_table',
