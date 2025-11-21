@@ -45,7 +45,7 @@ class InstallCommand extends Command
         // Publish migrations IN ORDER
         $this->info('📄 Publishing migrations...');
         $published = $this->publishMigrationsInOrder();
-        
+
         if ($published === 0) {
             $this->comment('⚠ No new migrations to publish (use --force to overwrite)');
         }
