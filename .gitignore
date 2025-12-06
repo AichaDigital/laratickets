@@ -36,3 +36,6 @@ HOTFIX_*.md
 BUG_*.md
 docs/SESSION_*.md
 docs/HOTFIX_*.md
+CLAUDE.md
+.claude/
+
