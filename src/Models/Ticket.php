@@ -56,6 +56,24 @@ class Ticket extends Model
      */
     protected array $userColumns = ['created_by', 'resolved_by'];
 
+    protected static function booted(): void
+    {
+        static::creating(function (Ticket $ticket) {
+            // Auto-assign level 1 if not set
+            if (empty($ticket->current_level_id)) {
+                $defaultLevel = TicketLevel::where('level', 1)->where('active', true)->first();
+                if ($defaultLevel) {
+                    $ticket->current_level_id = $defaultLevel->id;
+                }
+            }
+
+            // Auto-assign creator if authenticated and not set
+            if (empty($ticket->created_by) && auth()->check()) {
+                $ticket->created_by = auth()->id();
+            }
+        });
+    }
+
     protected $fillable = [
         'subject',
         'description',

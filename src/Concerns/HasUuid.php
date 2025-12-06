@@ -98,7 +98,14 @@ trait HasUuid
     {
         $field = $field ?? $this->getRouteKeyName();
 
-        return $this->resolveRouteBindingQuery($this, $value, $field)->first();
+        // For binary UUID storage, convert string UUID to binary for query
+        if ($this->usesBinaryUuid() && $field === $this->getKeyName()) {
+            if (is_string($value) && \Ramsey\Uuid\Uuid::isValid($value)) {
+                $value = \Ramsey\Uuid\Uuid::fromString($value)->getBytes();
+            }
+        }
+
+        return $this->where($field, $value)->first();
     }
 
     /**
