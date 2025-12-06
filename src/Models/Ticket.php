@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace AichaDigital\Laratickets\Models;
 
+use AichaDigital\Laratickets\Concerns\HasUserRelation;
+use AichaDigital\Laratickets\Concerns\HasUuid;
 use AichaDigital\Laratickets\Enums\Priority;
 use AichaDigital\Laratickets\Enums\RiskLevel;
 use AichaDigital\Laratickets\Enums\TicketStatus;
@@ -15,7 +17,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
- * @property int $id
+ * @property string $id UUID v7 primary key
  * @property string $subject
  * @property string $description
  * @property TicketStatus $status
@@ -24,8 +26,8 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property int $current_level_id
  * @property int|null $requested_level_id
  * @property int $department_id
- * @property int $created_by
- * @property int|null $resolved_by
+ * @property mixed $created_by User ID (type depends on config)
+ * @property mixed|null $resolved_by User ID (type depends on config)
  * @property float|null $global_score
  * @property int $total_evaluations
  * @property \Illuminate\Support\Carbon|null $estimated_deadline
@@ -37,11 +39,22 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property-read TicketLevel $currentLevel
  * @property-read TicketLevel|null $requestedLevel
  * @property-read Department $department
+ * @property-read \Illuminate\Database\Eloquent\Model $creator
+ * @property-read \Illuminate\Database\Eloquent\Model|null $resolver
  */
 class Ticket extends Model
 {
     use HasFactory;
+    use HasUserRelation;
+    use HasUuid;
     use SoftDeletes;
+
+    /**
+     * User columns for HasUserRelation trait.
+     *
+     * @var array<string>
+     */
+    protected array $userColumns = ['created_by', 'resolved_by'];
 
     protected $fillable = [
         'subject',

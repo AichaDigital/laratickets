@@ -1,9 +1,9 @@
 <?php
 
+use AichaDigital\Laratickets\Support\MigrationHelper;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
-use Illuminate\Support\Facades\DB;
 
 return new class extends Migration
 {
@@ -11,37 +11,21 @@ return new class extends Migration
     {
         Schema::create('risk_assessments', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('ticket_id')->constrained('tickets')->onDelete('cascade');
 
-            $this->addUserColumn($table, 'assessor_id');
+            // Ticket reference (UUID - matches tickets.id type)
+            MigrationHelper::uuidForeignKey($table, 'ticket_id');
+            $table->foreign('ticket_id')->references('id')->on('tickets')->onDelete('cascade');
+
+            // Assessor reference - auto-detected type
+            MigrationHelper::userIdColumn($table, 'assessor_id');
 
             $table->string('risk_level')->comment('low, medium, high, critical');
             $table->text('justification');
             $table->timestamps();
 
             $table->index(['ticket_id', 'risk_level']);
-            $table->index('assessor_id');
             $table->index('risk_level');
         });
-    }
-
-    protected function addUserColumn(Blueprint $table, string $columnName, bool $nullable = false): void
-    {
-        $idType = config('laratickets.user.id_type', 'integer');
-
-        $column = match($idType) {
-            'uuid', 'uuid_binary' => $table->uuid($columnName),
-            'ulid' => $table->ulid($columnName),
-            default => $table->unsignedBigInteger($columnName),
-        };
-
-        if ($nullable) {
-            $column->nullable();
-        }
-
-        if ($idType === 'uuid_binary') {
-            DB::statement("ALTER TABLE risk_assessments MODIFY {$columnName} BINARY(16)" . ($nullable ? ' NULL' : ' NOT NULL'));
-        }
     }
 
     public function down(): void

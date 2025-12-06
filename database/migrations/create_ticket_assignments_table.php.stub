@@ -1,9 +1,9 @@
 <?php
 
+use AichaDigital\Laratickets\Support\MigrationHelper;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
-use Illuminate\Support\Facades\DB;
 
 return new class extends Migration
 {
@@ -11,9 +11,13 @@ return new class extends Migration
     {
         Schema::create('ticket_assignments', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('ticket_id')->constrained('tickets')->onDelete('cascade');
 
-            $this->addUserColumn($table, 'user_id');
+            // Ticket reference (UUID - matches tickets.id type)
+            MigrationHelper::uuidForeignKey($table, 'ticket_id');
+            $table->foreign('ticket_id')->references('id')->on('tickets')->onDelete('cascade');
+
+            // Agent reference - auto-detected type
+            MigrationHelper::userIdColumn($table, 'user_id');
 
             $table->timestamp('assigned_at')->useCurrent();
             $table->timestamp('completed_at')->nullable();
@@ -21,28 +25,8 @@ return new class extends Migration
             $table->timestamps();
 
             $table->index(['ticket_id', 'user_id']);
-            $table->index('user_id');
             $table->index('completed_at');
         });
-    }
-
-    protected function addUserColumn(Blueprint $table, string $columnName, bool $nullable = false): void
-    {
-        $idType = config('laratickets.user.id_type', 'integer');
-
-        $column = match($idType) {
-            'uuid', 'uuid_binary' => $table->uuid($columnName),
-            'ulid' => $table->ulid($columnName),
-            default => $table->unsignedBigInteger($columnName),
-        };
-
-        if ($nullable) {
-            $column->nullable();
-        }
-
-        if ($idType === 'uuid_binary') {
-            DB::statement("ALTER TABLE ticket_assignments MODIFY {$columnName} BINARY(16)" . ($nullable ? ' NULL' : ' NOT NULL'));
-        }
     }
 
     public function down(): void

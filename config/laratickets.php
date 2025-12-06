@@ -9,13 +9,16 @@ return [
     |--------------------------------------------------------------------------
     |
     | Configure the user model and ID type for your application.
-    | Supports: integer, uuid, uuid_binary (UUID v7 binary), ulid
+    | Supports: auto, int, uuid, uuid_binary (UUID v7 binary), ulid, ulid_binary
+    |
+    | When set to 'auto', the package will detect the user ID type from the
+    | existing users table schema. This is the recommended default.
     |
     */
     'user' => [
         'model' => env('LARATICKETS_USER_MODEL', config('auth.providers.users.model')),
         'id_column' => env('LARATICKETS_USER_ID_COLUMN', 'id'),
-        'id_type' => env('LARATICKETS_USER_ID_TYPE', 'integer'),
+        'id_type' => env('LARATICKETS_USER_ID_TYPE', 'auto'),
     ],
 
     /*

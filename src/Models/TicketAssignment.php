@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace AichaDigital\Laratickets\Models;
 
+use AichaDigital\Laratickets\Concerns\HasUserRelation;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -11,18 +12,27 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
  * @property int $id
- * @property int $ticket_id
- * @property int $user_id
+ * @property string $ticket_id UUID reference to ticket
+ * @property mixed $user_id User ID (type depends on config)
  * @property \Illuminate\Support\Carbon|null $assigned_at
  * @property \Illuminate\Support\Carbon|null $completed_at
  * @property float|null $individual_rating
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read Ticket $ticket
+ * @property-read \Illuminate\Database\Eloquent\Model $user
  */
 class TicketAssignment extends Model
 {
     use HasFactory;
+    use HasUserRelation;
+
+    /**
+     * User columns for HasUserRelation trait.
+     *
+     * @var array<string>
+     */
+    protected array $userColumns = ['user_id'];
 
     protected $fillable = [
         'ticket_id',

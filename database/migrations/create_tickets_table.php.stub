@@ -1,16 +1,18 @@
 <?php
 
+use AichaDigital\Laratickets\Support\MigrationHelper;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
-use Illuminate\Support\Facades\DB;
 
 return new class extends Migration
 {
     public function up(): void
     {
         Schema::create('tickets', function (Blueprint $table) {
-            $table->id();
+            // UUID v7 primary key (agnostic: string or binary via cast)
+            MigrationHelper::uuidPrimaryKey($table);
+
             $table->string('subject');
             $table->text('description');
 
@@ -26,9 +28,9 @@ return new class extends Migration
             // Department
             $table->foreignId('department_id')->constrained('departments');
 
-            // User references - adaptable to different ID types
-            $this->addUserColumn($table, 'created_by');
-            $this->addUserColumn($table, 'resolved_by', true);
+            // User references - auto-detected type
+            MigrationHelper::userIdColumn($table, 'created_by');
+            MigrationHelper::userIdColumn($table, 'resolved_by', nullable: true);
 
             // Scores and ratings
             $table->decimal('global_score', 3, 2)->nullable()->comment('Average evaluation score (1-5)');
@@ -44,30 +46,9 @@ return new class extends Migration
             // Indexes for performance
             $table->index(['status', 'current_level_id']);
             $table->index(['department_id', 'status']);
-            $table->index('created_by');
             $table->index('estimated_deadline');
             $table->index('created_at');
         });
-    }
-
-    protected function addUserColumn(Blueprint $table, string $columnName, bool $nullable = false): void
-    {
-        $idType = config('laratickets.user.id_type', 'integer');
-
-        $column = match($idType) {
-            'uuid', 'uuid_binary' => $table->uuid($columnName),
-            'ulid' => $table->ulid($columnName),
-            default => $table->unsignedBigInteger($columnName),
-        };
-
-        if ($nullable) {
-            $column->nullable();
-        }
-
-        // Convert to binary for uuid_binary after column creation
-        if ($idType === 'uuid_binary') {
-            DB::statement("ALTER TABLE tickets MODIFY {$columnName} BINARY(16)" . ($nullable ? ' NULL' : ' NOT NULL'));
-        }
     }
 
     public function down(): void

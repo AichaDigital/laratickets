@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace AichaDigital\Laratickets\Models;
 
+use AichaDigital\Laratickets\Concerns\HasUserRelation;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -11,11 +12,11 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
  * @property int $id
- * @property int $ticket_id
+ * @property string $ticket_id UUID reference to ticket
  * @property int $from_level_id
  * @property int $to_level_id
- * @property int $requester_id
- * @property int|null $approver_id
+ * @property mixed $requester_id User ID (type depends on config)
+ * @property mixed|null $approver_id User ID (type depends on config)
  * @property string $justification
  * @property string $status
  * @property string|null $rejection_reason
@@ -27,10 +28,20 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property-read Ticket $ticket
  * @property-read TicketLevel $fromLevel
  * @property-read TicketLevel $toLevel
+ * @property-read \Illuminate\Database\Eloquent\Model $requester
+ * @property-read \Illuminate\Database\Eloquent\Model|null $approver
  */
 class EscalationRequest extends Model
 {
     use HasFactory;
+    use HasUserRelation;
+
+    /**
+     * User columns for HasUserRelation trait.
+     *
+     * @var array<string>
+     */
+    protected array $userColumns = ['requester_id', 'approver_id'];
 
     protected $fillable = [
         'ticket_id',
