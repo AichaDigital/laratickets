@@ -13,11 +13,13 @@ use Ramsey\Uuid\Uuid;
  * Migration Helper for User ID Type Detection
  *
  * Provides agnostic support for different User ID types:
- * - int (unsignedBigInteger)
- * - uuid (string char 36)
- * - uuid_binary (binary 16)
- * - ulid (string char 26)
- * - ulid_binary (binary 26)
+ *
+ * - int (unsignedBigInteger) - Standard Laravel default
+ * - uuid (string char 36) - UUID v7, recommended
+ * - ulid (string char 26) - ULID alternative
+ *
+ * Note: uuid_binary and ulid_binary were removed in v1.0 due to incompatibility
+ * with FilamentPHP v4. See ADR-002 for details.
  */
 class MigrationHelper
 {
@@ -36,9 +38,7 @@ class MigrationHelper
 
         $column = match ($idType) {
             'uuid' => $table->uuid($columnName),
-            'uuid_binary' => $table->binary($columnName, 16),
             'ulid' => $table->ulid($columnName),
-            'ulid_binary' => $table->binary($columnName, 26),
             default => $table->unsignedBigInteger($columnName),
         };
 
@@ -56,9 +56,11 @@ class MigrationHelper
     {
         $configured = config('laratickets.user.id_type', 'auto');
 
-        // If explicitly configured (not auto), use it
+        // If explicitly configured (not auto), validate and use it
         if ($configured !== 'auto' && $configured !== 'integer') {
-            return $configured;
+            if (in_array($configured, ['int', 'uuid', 'ulid'], true)) {
+                return $configured;
+            }
         }
 
         // Try auto-detection if users table exists
@@ -69,8 +71,8 @@ class MigrationHelper
             }
         }
 
-        // Default to int (standard Laravel)
-        return 'int';
+        // Default to uuid (recommended)
+        return 'uuid';
     }
 
     /**
@@ -99,18 +101,6 @@ class MigrationHelper
                 // Detect based on column type
                 if (str_contains($type, 'bigint')) {
                     return 'int';
-                }
-
-                if (str_contains($type, 'binary') || str_contains($type, 'varbinary')) {
-                    // Check size to differentiate UUID from ULID
-                    if (str_contains($type, '(16)')) {
-                        return 'uuid_binary';
-                    }
-                    if (str_contains($type, '(26)')) {
-                        return 'ulid_binary';
-                    }
-
-                    return 'uuid_binary'; // Default for binary
                 }
 
                 if (str_contains($type, 'char') || str_contains($type, 'varchar')) {
@@ -151,22 +141,6 @@ class MigrationHelper
                     return 'uuid';
                 }
 
-                if ($type === 'bytea') {
-                    // PostgreSQL binary type - check length with sample
-                    $user = DB::table('users')->first();
-                    if ($user && isset($user->{$idColumn})) {
-                        $length = strlen($user->{$idColumn});
-                        if ($length === 16) {
-                            return 'uuid_binary';
-                        }
-                        if ($length === 26) {
-                            return 'ulid_binary';
-                        }
-                    }
-
-                    return 'uuid_binary';
-                }
-
                 if ($type === 'character varying' || $type === 'character') {
                     $user = DB::table('users')->first();
                     if ($user && isset($user->{$idColumn})) {
@@ -197,7 +171,7 @@ class MigrationHelper
                     }
                 }
 
-                return 'int'; // SQLite default
+                return 'uuid'; // Default to uuid for SQLite
             }
 
             return null;
@@ -214,10 +188,8 @@ class MigrationHelper
     {
         return match ($idType) {
             'int' => 'Integer (unsignedBigInteger) - Standard Laravel default',
-            'uuid' => 'UUID String (char 36) - Human readable, larger storage',
-            'uuid_binary' => 'UUID Binary (16 bytes) - Most efficient UUID storage',
+            'uuid' => 'UUID v7 String (char 36) - Ordered, recommended',
             'ulid' => 'ULID String (char 26) - Sortable, human readable',
-            'ulid_binary' => 'ULID Binary (26 bytes) - Sortable, efficient storage',
             default => 'Unknown ID type',
         };
     }
@@ -230,33 +202,21 @@ class MigrationHelper
         return in_array($idType, [
             'int',
             'uuid',
-            'uuid_binary',
             'ulid',
-            'ulid_binary',
         ], true);
     }
 
     /**
      * Add a UUID primary key column.
-     *
-     * The column is created as uuid() by default.
-     * For binary storage, use uuid_binary id_type in config.
      */
     public static function uuidPrimaryKey(Blueprint $table, string $columnName = 'id'): void
     {
-        $idType = static::getUserIdType();
-
-        if ($idType === 'uuid_binary') {
-            $table->binary($columnName, 16)->primary();
-        } else {
-            $table->uuid($columnName)->primary();
-        }
+        $table->uuid($columnName)->primary();
     }
 
     /**
      * Add a UUID foreign key column (for referencing ticket.id).
      *
-     * Matches the type used for UUID primary keys.
      * Use this for ticket_id foreign keys in child tables.
      */
     public static function uuidForeignKey(
@@ -265,12 +225,7 @@ class MigrationHelper
         bool $nullable = false,
         bool $index = true
     ): void {
-        $idType = static::getUserIdType();
-
-        $column = match ($idType) {
-            'uuid_binary' => $table->binary($columnName, 16),
-            default => $table->uuid($columnName),
-        };
+        $column = $table->uuid($columnName);
 
         if ($nullable) {
             $column->nullable();

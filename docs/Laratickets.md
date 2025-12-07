@@ -1138,33 +1138,29 @@ src/
 'user' => [
     'model' => env('LARATICKETS_USER_MODEL', config('auth.providers.users.model')),
     'id_column' => env('LARATICKETS_USER_ID_COLUMN', 'id'),
-    'id_type' => env('LARATICKETS_USER_ID_TYPE', 'integer'), // integer, uuid, uuid_binary, ulid
+    'id_type' => env('LARATICKETS_USER_ID_TYPE', 'auto'), // auto, int, uuid, ulid
 ],
 ```
 
+> **Nota:** `uuid_binary` fue eliminado en v1.0 por incompatibilidad con FilamentPHP v4.
+> Ver ADR-002 para más detalles.
+
 **Migraciones Adaptables:**
 
+El paquete usa `MigrationHelper` para crear columnas de usuario de forma agnóstica:
+
 ```php
-// En migraciones del paquete
+use AichaDigital\Laratickets\Support\MigrationHelper;
+
 Schema::create('tickets', function (Blueprint $table) {
-    $idType = config('laratickets.user.id_type');
-    
-    match($idType) {
-        'uuid', 'uuid_binary' => $table->uuid('created_by'),
-        'ulid' => $table->ulid('created_by'),
-        default => $table->unsignedBigInteger('created_by'),
-    };
-    
-    // Si es UUID binario, aplicar conversión
-    if ($idType === 'uuid_binary') {
-        DB::statement('ALTER TABLE tickets MODIFY created_by BINARY(16)');
-    }
-    
+    // Crea columna del tipo correcto según config
+    MigrationHelper::userIdColumn($table, 'created_by');
+
     // ...resto de campos
 });
 ```
 
-**Testing con UUID v7 Binario:**
+**Testing con UUID v7:**
 
 En el escenario de pruebas del paquete sobre aplicación:
 
@@ -1174,7 +1170,7 @@ return [
     'user' => [
         'model' => App\Models\User::class,
         'id_column' => 'id',
-        'id_type' => 'uuid_binary', // UUID v7 binario para testing
+        'id_type' => 'uuid', // UUID v7 string (recomendado)
     ],
     // ...resto configuración
 ];

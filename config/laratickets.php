@@ -9,10 +9,15 @@ return [
     |--------------------------------------------------------------------------
     |
     | Configure the user model and ID type for your application.
-    | Supports: auto, int, uuid, uuid_binary (UUID v7 binary), ulid, ulid_binary
+    | Supports: auto, int, uuid, ulid
     |
-    | When set to 'auto', the package will detect the user ID type from the
-    | existing users table schema. This is the recommended default.
+    | - 'auto': Auto-detect from users table (recommended)
+    | - 'int': Standard auto-increment integer
+    | - 'uuid': UUID v7 string (36 chars) - RECOMMENDED for new projects
+    | - 'ulid': ULID string (26 chars)
+    |
+    | Note: uuid_binary was removed in v1.0 due to incompatibility with
+    | FilamentPHP v4 + Livewire. See ADR-002 for migration guide.
     |
     */
     'user' => [

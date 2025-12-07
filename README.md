@@ -64,7 +64,7 @@ return [
     // User model configuration
     'user' => [
         'model' => env('LARATICKETS_USER_MODEL', config('auth.providers.users.model')),
-        'id_type' => env('LARATICKETS_USER_ID_TYPE', 'integer'), // integer|uuid|uuid_binary|ulid
+        'id_type' => env('LARATICKETS_USER_ID_TYPE', 'auto'), // auto|int|uuid|ulid
     ],
 
     // Authorization handlers
