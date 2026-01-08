@@ -125,6 +125,8 @@ class TicketService
     /**
      * Cancel a ticket
      *
+     * Uses database transaction for atomicity.
+     *
      * @param  mixed  $user  User model instance (type is configurable via config('laratickets.user.model'))
      */
     public function cancelTicket(Ticket $ticket, $user, ?string $reason = null): Ticket
@@ -133,15 +135,17 @@ class TicketService
             throw new \RuntimeException('User is not authorized to cancel this ticket');
         }
 
-        $ticket->update([
-            'status' => TicketStatus::CANCELLED,
-            'closed_at' => now(),
-        ]);
+        return DB::transaction(function () use ($ticket) {
+            $ticket->update([
+                'status' => TicketStatus::CANCELLED,
+                'closed_at' => now(),
+            ]);
 
-        // Complete all active assignments
-        $ticket->activeAssignments()->update(['completed_at' => now()]);
+            // Complete all active assignments
+            $ticket->activeAssignments()->update(['completed_at' => now()]);
 
-        return $ticket->fresh();
+            return $ticket->fresh();
+        });
     }
 
     public function updateEstimatedDeadline(Ticket $ticket, \DateTimeInterface $deadline): Ticket

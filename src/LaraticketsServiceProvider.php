@@ -13,6 +13,17 @@ use Spatie\LaravelPackageTools\PackageServiceProvider;
 
 class LaraticketsServiceProvider extends PackageServiceProvider
 {
+    public function boot(): void
+    {
+        parent::boot();
+
+        // Load migrations automatically (same pattern as larabill)
+        // Migrations use MigrationHelper for ID type agnosticism
+        if ($this->app->runningInConsole()) {
+            $this->loadMigrationsFrom(__DIR__.'/../database/migrations');
+        }
+    }
+
     public function configurePackage(Package $package): void
     {
         $package
@@ -20,15 +31,9 @@ class LaraticketsServiceProvider extends PackageServiceProvider
             ->hasConfigFile()
             ->hasViews()
             ->hasRoute('api')
-            ->hasMigration('create_ticket_levels_table')
-            ->hasMigration('create_departments_table')
-            ->hasMigration('create_tickets_table')
-            ->hasMigration('create_ticket_assignments_table')
-            ->hasMigration('create_escalation_requests_table')
-            ->hasMigration('create_ticket_evaluations_table')
-            ->hasMigration('create_agent_ratings_table')
-            ->hasMigration('create_risk_assessments_table')
             ->hasCommand(InstallCommand::class);
+
+        // Note: Migrations load automatically via loadMigrationsFrom() in boot()
     }
 
     public function packageRegistered(): void
