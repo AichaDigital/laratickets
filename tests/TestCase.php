@@ -34,28 +34,28 @@ class TestCase extends Orchestra
         ]);
 
         // Run migrations
-        $migration = include __DIR__.'/../database/migrations/create_ticket_levels_table.php.stub';
+        $migration = include __DIR__.'/../database/migrations/2024_11_01_000001_create_ticket_levels_table.php';
         $migration->up();
 
-        $migration = include __DIR__.'/../database/migrations/create_departments_table.php.stub';
+        $migration = include __DIR__.'/../database/migrations/2024_11_01_000002_create_departments_table.php';
         $migration->up();
 
-        $migration = include __DIR__.'/../database/migrations/create_tickets_table.php.stub';
+        $migration = include __DIR__.'/../database/migrations/2024_11_01_000003_create_tickets_table.php';
         $migration->up();
 
-        $migration = include __DIR__.'/../database/migrations/create_ticket_assignments_table.php.stub';
+        $migration = include __DIR__.'/../database/migrations/2024_11_01_000004_create_ticket_assignments_table.php';
         $migration->up();
 
-        $migration = include __DIR__.'/../database/migrations/create_escalation_requests_table.php.stub';
+        $migration = include __DIR__.'/../database/migrations/2024_11_01_000005_create_escalation_requests_table.php';
         $migration->up();
 
-        $migration = include __DIR__.'/../database/migrations/create_ticket_evaluations_table.php.stub';
+        $migration = include __DIR__.'/../database/migrations/2024_11_01_000006_create_ticket_evaluations_table.php';
         $migration->up();
 
-        $migration = include __DIR__.'/../database/migrations/create_agent_ratings_table.php.stub';
+        $migration = include __DIR__.'/../database/migrations/2024_11_01_000007_create_agent_ratings_table.php';
         $migration->up();
 
-        $migration = include __DIR__.'/../database/migrations/create_risk_assessments_table.php.stub';
+        $migration = include __DIR__.'/../database/migrations/2024_11_01_000008_create_risk_assessments_table.php';
         $migration->up();
     }
 }

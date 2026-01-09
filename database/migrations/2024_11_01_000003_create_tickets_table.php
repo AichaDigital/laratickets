@@ -23,7 +23,7 @@ return new class extends Migration
 
             // Level management
             $table->foreignId('current_level_id')->constrained('ticket_levels');
-            $table->foreignId('requested_level_id')->nullable()->constrained('ticket_levels')->comment('For pending escalations');
+            $table->foreignId('requested_level_id')->nullable()->comment('For pending escalations')->constrained('ticket_levels');
 
             // Department
             $table->foreignId('department_id')->constrained('departments');
