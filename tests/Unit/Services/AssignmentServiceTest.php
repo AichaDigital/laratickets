@@ -189,7 +189,7 @@ describe('AssignmentService authorization and validation', function () {
 
         // Agent only has Level 1 access
         expect(fn () => $this->service->assignAgent($ticket, $this->agent))
-            ->toThrow(\RuntimeException::class, 'Agent does not have access to this ticket level');
+            ->toThrow(RuntimeException::class, 'Agent does not have access to this ticket level');
     });
 
     it('throws exception when agent has max concurrent tickets', function () {
@@ -213,7 +213,7 @@ describe('AssignmentService authorization and validation', function () {
         ]);
 
         expect(fn () => $service->assignAgent($ticket, $this->agent))
-            ->toThrow(\RuntimeException::class, 'Agent has reached maximum concurrent tickets');
+            ->toThrow(RuntimeException::class, 'Agent has reached maximum concurrent tickets');
     });
 
     it('throws exception when assigner is not authorized', function () {
@@ -232,7 +232,7 @@ describe('AssignmentService authorization and validation', function () {
         ]);
 
         expect(fn () => $service->assignAgent($ticket, $this->agent, $this->assigner))
-            ->toThrow(\RuntimeException::class, 'User is not authorized to assign agents');
+            ->toThrow(RuntimeException::class, 'User is not authorized to assign agents');
     });
 });
 
@@ -248,7 +248,7 @@ describe('AssignmentService unassignment', function () {
         ]);
 
         expect(fn () => $this->service->unassignAgent($ticket, $this->agent))
-            ->toThrow(\RuntimeException::class, 'Agent is not assigned to this ticket');
+            ->toThrow(RuntimeException::class, 'Agent is not assigned to this ticket');
     });
 
     it('completes assignment when unassigning agent', function () {

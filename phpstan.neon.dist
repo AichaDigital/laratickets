@@ -34,3 +34,11 @@ parameters:
         -
             message: '#^Call to deprecated method get\(\) of class Illuminate\\Http\\Request#'
             path: src/Http/Controllers/Api/TicketController.php
+
+        # HasUserRelation trait is designed to be used by models that MAY or MAY NOT
+        # declare $userColumns. When analyzed in the context of a model that declares
+        # it, property_exists() always evaluates to true — but the trait itself must
+        # keep the defensive check for any consumer model that does not declare it.
+        -
+            message: '#^Call to function property_exists\(\) with \$this\(AichaDigital\\Laratickets\\Models\\.+\) and ''userColumns'' will always evaluate to true\.$#'
+            path: src/Concerns/HasUserRelation.php
