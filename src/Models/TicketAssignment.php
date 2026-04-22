@@ -9,18 +9,19 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Carbon;
 
 /**
  * @property int $id
  * @property string $ticket_id UUID reference to ticket
  * @property mixed $user_id User ID (type depends on config)
- * @property \Illuminate\Support\Carbon|null $assigned_at
- * @property \Illuminate\Support\Carbon|null $completed_at
+ * @property Carbon|null $assigned_at
+ * @property Carbon|null $completed_at
  * @property float|null $individual_rating
- * @property \Illuminate\Support\Carbon|null $created_at
- * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
  * @property-read Ticket $ticket
- * @property-read \Illuminate\Database\Eloquent\Model $user
+ * @property-read Model $user
  */
 class TicketAssignment extends Model
 {

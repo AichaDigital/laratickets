@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace AichaDigital\Laratickets\Concerns;
 
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
@@ -42,8 +43,7 @@ trait HasUserRelation
      */
     protected function getUserColumns(): array
     {
-        // Default user columns, override in model if different
-        return $this->userColumns ?? ['user_id'];
+        return property_exists($this, 'userColumns') ? $this->userColumns : ['user_id'];
     }
 
     /**
@@ -65,7 +65,7 @@ trait HasUserRelation
     /**
      * Get the user that created this record (for models with created_by).
      *
-     * @return BelongsTo<\Illuminate\Database\Eloquent\Model, $this>
+     * @return BelongsTo<Model, $this>
      */
     public function creator(): BelongsTo
     {
@@ -79,7 +79,7 @@ trait HasUserRelation
     /**
      * Get the user that resolved this record (for models with resolved_by).
      *
-     * @return BelongsTo<\Illuminate\Database\Eloquent\Model, $this>
+     * @return BelongsTo<Model, $this>
      */
     public function resolver(): BelongsTo
     {
@@ -93,7 +93,7 @@ trait HasUserRelation
     /**
      * Get the user relationship (for models with user_id).
      *
-     * @return BelongsTo<\Illuminate\Database\Eloquent\Model, $this>
+     * @return BelongsTo<Model, $this>
      */
     public function user(): BelongsTo
     {
@@ -107,7 +107,7 @@ trait HasUserRelation
     /**
      * Get the agent relationship (for models with agent_id).
      *
-     * @return BelongsTo<\Illuminate\Database\Eloquent\Model, $this>
+     * @return BelongsTo<Model, $this>
      */
     public function agent(): BelongsTo
     {
@@ -121,7 +121,7 @@ trait HasUserRelation
     /**
      * Get the rater relationship (for models with rater_id).
      *
-     * @return BelongsTo<\Illuminate\Database\Eloquent\Model, $this>
+     * @return BelongsTo<Model, $this>
      */
     public function rater(): BelongsTo
     {
@@ -135,7 +135,7 @@ trait HasUserRelation
     /**
      * Get the requester relationship (for models with requester_id).
      *
-     * @return BelongsTo<\Illuminate\Database\Eloquent\Model, $this>
+     * @return BelongsTo<Model, $this>
      */
     public function requester(): BelongsTo
     {
@@ -149,7 +149,7 @@ trait HasUserRelation
     /**
      * Get the approver relationship (for models with approver_id).
      *
-     * @return BelongsTo<\Illuminate\Database\Eloquent\Model, $this>
+     * @return BelongsTo<Model, $this>
      */
     public function approver(): BelongsTo
     {
@@ -163,7 +163,7 @@ trait HasUserRelation
     /**
      * Get the evaluator relationship (for models with evaluator_id).
      *
-     * @return BelongsTo<\Illuminate\Database\Eloquent\Model, $this>
+     * @return BelongsTo<Model, $this>
      */
     public function evaluator(): BelongsTo
     {
@@ -177,7 +177,7 @@ trait HasUserRelation
     /**
      * Get the assessor relationship (for models with assessor_id).
      *
-     * @return BelongsTo<\Illuminate\Database\Eloquent\Model, $this>
+     * @return BelongsTo<Model, $this>
      */
     public function assessor(): BelongsTo
     {

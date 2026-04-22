@@ -8,8 +8,10 @@ use AichaDigital\Laratickets\Contracts\TicketAuthorizationContract;
 use AichaDigital\Laratickets\Contracts\UserCapabilityContract;
 use AichaDigital\Laratickets\Enums\RiskLevel;
 use AichaDigital\Laratickets\Events\RiskAssessed;
+use AichaDigital\Laratickets\Models\EscalationRequest;
 use AichaDigital\Laratickets\Models\RiskAssessment;
 use AichaDigital\Laratickets\Models\Ticket;
+use AichaDigital\Laratickets\Models\TicketLevel;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
@@ -90,7 +92,7 @@ class RiskAssessmentService
     /**
      * Get high risk tickets
      *
-     * @return Collection<int, \AichaDigital\Laratickets\Models\Ticket>
+     * @return Collection<int, Ticket>
      */
     public function getHighRiskTickets(): Collection
     {
@@ -102,7 +104,7 @@ class RiskAssessmentService
     /**
      * Get critical risk tickets
      *
-     * @return Collection<int, \AichaDigital\Laratickets\Models\Ticket>
+     * @return Collection<int, Ticket>
      */
     public function getCriticalRiskTickets(): Collection
     {
@@ -122,7 +124,7 @@ class RiskAssessmentService
             return;
         }
 
-        $nextLevel = \AichaDigital\Laratickets\Models\TicketLevel::where('level', $ticket->currentLevel->level + 1)
+        $nextLevel = TicketLevel::where('level', $ticket->currentLevel->level + 1)
             ->first();
 
         if (! $nextLevel) {
@@ -138,7 +140,7 @@ class RiskAssessmentService
         );
 
         // Auto-approve since it's system-initiated
-        /** @var \AichaDigital\Laratickets\Models\EscalationRequest|null $latestEscalation */
+        /** @var EscalationRequest|null $latestEscalation */
         $latestEscalation = $ticket->escalationRequests()
             ->where('is_automatic', true)
             ->where('status', 'pending')

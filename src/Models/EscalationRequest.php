@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Carbon;
 
 /**
  * @property int $id
@@ -21,15 +22,15 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property string $status
  * @property string|null $rejection_reason
  * @property bool $is_automatic
- * @property \Illuminate\Support\Carbon|null $requested_at
- * @property \Illuminate\Support\Carbon|null $resolved_at
- * @property \Illuminate\Support\Carbon|null $created_at
- * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property Carbon|null $requested_at
+ * @property Carbon|null $resolved_at
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
  * @property-read Ticket $ticket
  * @property-read TicketLevel $fromLevel
  * @property-read TicketLevel $toLevel
- * @property-read \Illuminate\Database\Eloquent\Model $requester
- * @property-read \Illuminate\Database\Eloquent\Model|null $approver
+ * @property-read Model $requester
+ * @property-read Model|null $approver
  */
 class EscalationRequest extends Model
 {

@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Carbon;
 
 /**
  * @property int $id
@@ -17,11 +18,11 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property mixed $rater_id User ID (type depends on config)
  * @property float $score
  * @property string|null $comment
- * @property \Illuminate\Support\Carbon|null $created_at
- * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
  * @property-read Ticket $ticket
- * @property-read \Illuminate\Database\Eloquent\Model $agent
- * @property-read \Illuminate\Database\Eloquent\Model $rater
+ * @property-read Model $agent
+ * @property-read Model $rater
  */
 class AgentRating extends Model
 {

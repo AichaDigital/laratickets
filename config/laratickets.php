@@ -1,6 +1,9 @@
 <?php
 
 declare(strict_types=1);
+use AichaDigital\Laratickets\Implementations\BasicTicketAuthorization;
+use AichaDigital\Laratickets\Implementations\BasicUserCapabilityHandler;
+use AichaDigital\Laratickets\Implementations\DefaultNotificationHandler;
 
 return [
     /*
@@ -38,11 +41,11 @@ return [
     'authorization' => [
         'handler' => env(
             'LARATICKETS_AUTHORIZATION_HANDLER',
-            \AichaDigital\Laratickets\Implementations\BasicTicketAuthorization::class
+            BasicTicketAuthorization::class
         ),
         'capability_handler' => env(
             'LARATICKETS_CAPABILITY_HANDLER',
-            \AichaDigital\Laratickets\Implementations\BasicUserCapabilityHandler::class
+            BasicUserCapabilityHandler::class
         ),
     ],
 
@@ -57,7 +60,7 @@ return [
     'notifications' => [
         'handler' => env(
             'LARATICKETS_NOTIFICATION_HANDLER',
-            \AichaDigital\Laratickets\Implementations\DefaultNotificationHandler::class
+            DefaultNotificationHandler::class
         ),
         'enabled' => env('LARATICKETS_NOTIFICATIONS_ENABLED', true),
         'channels' => [

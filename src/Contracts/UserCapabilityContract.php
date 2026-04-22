@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace AichaDigital\Laratickets\Contracts;
 
+use AichaDigital\Laratickets\Models\Department;
+use AichaDigital\Laratickets\Models\Ticket;
 use AichaDigital\Laratickets\Models\TicketLevel;
 use Illuminate\Support\Collection;
 
@@ -20,7 +22,7 @@ interface UserCapabilityContract
      * Get departments assigned to a user
      *
      * @param  mixed  $user  User model instance (type is configurable via config('laratickets.user.model'))
-     * @return Collection<int, \AichaDigital\Laratickets\Models\Department>
+     * @return Collection<int, Department>
      */
     public function getUserDepartments($user): Collection;
 
@@ -35,7 +37,7 @@ interface UserCapabilityContract
      * Get tickets currently assigned to a user
      *
      * @param  mixed  $user  User model instance (type is configurable via config('laratickets.user.model'))
-     * @return Collection<int, \AichaDigital\Laratickets\Models\Ticket>
+     * @return Collection<int, Ticket>
      */
     public function getUserAssignedTickets($user): Collection;
 }

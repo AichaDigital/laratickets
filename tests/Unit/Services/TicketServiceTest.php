@@ -163,7 +163,7 @@ describe('TicketService authorization checks', function () {
         ]);
 
         expect(fn () => $service->cancelTicket($ticket, $this->user))
-            ->toThrow(\RuntimeException::class, 'User is not authorized to cancel this ticket');
+            ->toThrow(RuntimeException::class, 'User is not authorized to cancel this ticket');
     });
 
     it('throws exception when user cannot close ticket', function () {
@@ -182,7 +182,7 @@ describe('TicketService authorization checks', function () {
         ]);
 
         expect(fn () => $service->closeTicket($ticket, $this->user))
-            ->toThrow(\RuntimeException::class, 'User is not authorized to close this ticket');
+            ->toThrow(RuntimeException::class, 'User is not authorized to close this ticket');
     });
 });
 

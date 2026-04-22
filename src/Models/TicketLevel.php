@@ -7,6 +7,7 @@ namespace AichaDigital\Laratickets\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Carbon;
 
 /**
  * @property int $id
@@ -17,8 +18,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property bool $can_assess_risk
  * @property int $default_sla_hours
  * @property bool $active
- * @property \Illuminate\Support\Carbon|null $created_at
- * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
  */
 class TicketLevel extends Model
 {

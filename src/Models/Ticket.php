@@ -15,6 +15,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Carbon;
 
 /**
  * @property string $id UUID v7 primary key
@@ -30,17 +31,17 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property mixed|null $resolved_by User ID (type depends on config)
  * @property float|null $global_score
  * @property int $total_evaluations
- * @property \Illuminate\Support\Carbon|null $estimated_deadline
- * @property \Illuminate\Support\Carbon|null $resolved_at
- * @property \Illuminate\Support\Carbon|null $closed_at
- * @property \Illuminate\Support\Carbon|null $created_at
- * @property \Illuminate\Support\Carbon|null $updated_at
- * @property \Illuminate\Support\Carbon|null $deleted_at
+ * @property Carbon|null $estimated_deadline
+ * @property Carbon|null $resolved_at
+ * @property Carbon|null $closed_at
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
+ * @property Carbon|null $deleted_at
  * @property-read TicketLevel $currentLevel
  * @property-read TicketLevel|null $requestedLevel
  * @property-read Department $department
- * @property-read \Illuminate\Database\Eloquent\Model $creator
- * @property-read \Illuminate\Database\Eloquent\Model|null $resolver
+ * @property-read Model $creator
+ * @property-read Model|null $resolver
  */
 class Ticket extends Model
 {
