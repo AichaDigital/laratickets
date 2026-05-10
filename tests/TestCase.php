@@ -8,6 +8,18 @@ use Orchestra\Testbench\TestCase as Orchestra;
 
 class TestCase extends Orchestra
 {
+    /**
+     * Deterministic UUID v7 fixtures for tests that need actor IDs.
+     *
+     * Same prefix as larabill (0194a000-…) so consumers loading both packages
+     * recognize them as AichaDigital test fixtures.
+     */
+    public const USER_UUID_1 = '0194a000-0000-7000-8000-000000000001';
+
+    public const USER_UUID_2 = '0194a000-0000-7000-8000-000000000002';
+
+    public const USER_UUID_3 = '0194a000-0000-7000-8000-000000000003';
+
     protected function setUp(): void
     {
         parent::setUp();
