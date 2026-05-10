@@ -7,14 +7,17 @@ namespace AichaDigital\Laratickets\Commands;
 use AichaDigital\Laratickets\Models\Department;
 use AichaDigital\Laratickets\Models\TicketLevel;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Schema;
 
 class InstallCommand extends Command
 {
     protected $signature = 'laratickets:install
                           {--seed : Seed default levels and departments}
                           {--force : Force overwrite existing files}
-                          {--no-migrate : Skip running migrations}';
+                          {--no-migrate : Skip running migrations}
+                          {--skip-uuid-check : Skip the users.id UUID preflight check}';
 
     protected $description = 'Install Laratickets package';
 
@@ -34,6 +37,10 @@ class InstallCommand extends Command
     {
         $this->info('🚀 Installing Laratickets...');
         $this->newLine();
+
+        if (! $this->option('skip-uuid-check') && ! $this->verifyUsersTableUuid()) {
+            return self::FAILURE;
+        }
 
         // Publish config
         $this->info('📝 Publishing configuration...');
@@ -74,6 +81,152 @@ class InstallCommand extends Command
         $this->line('  - Seed data: php artisan laratickets:install --seed');
 
         return self::SUCCESS;
+    }
+
+    /**
+     * Preflight: verify that `users.id` is UUID char(36).
+     *
+     * Per ADR-001 (laratickets) and ADR-006 (larabill canonical), laratickets
+     * is UUID-first. The 9 FK columns to users.id (created_by, resolved_by,
+     * user_id, requester_id, approver_id, evaluator_id, agent_id, rater_id,
+     * assessor_id) are emitted as char(36) and require a matching users.id.
+     *
+     * If the consumer's users.id is bigInteger or ULID, FK migrations would
+     * succeed but later inserts/joins would fail at runtime. This preflight
+     * aborts install before any damage is done.
+     *
+     * Pass --skip-uuid-check to bypass (e.g. CI dry-runs, custom workflows).
+     */
+    protected function verifyUsersTableUuid(): bool
+    {
+        $idColumn = (string) config('laratickets.user.id_column', 'id');
+
+        if (! Schema::hasTable('users')) {
+            $this->warn(sprintf(
+                '⚠ Users table not found — skipping preflight. Ensure your `users.%s` column is char(36) UUID v7 before migrating.',
+                $idColumn
+            ));
+            $this->line('  See: https://github.com/AichaDigital/larabill/blob/main/docs/setup-uuid.md');
+
+            return true;
+        }
+
+        $detectedType = $this->detectUsersIdType($idColumn);
+
+        if ($detectedType === 'uuid') {
+            $this->info(sprintf('✓ Preflight OK — users.%s is UUID char(36)', $idColumn));
+
+            return true;
+        }
+
+        $this->error(sprintf(
+            '✗ Preflight failed — users.%s is not UUID char(36) (detected: %s).',
+            $idColumn,
+            $detectedType ?? 'unknown'
+        ));
+        $this->line('');
+        $this->line('Laratickets requires the consumer app to use UUID v7 char(36) for users.id.');
+        $this->line('See setup guide: https://github.com/AichaDigital/larabill/blob/main/docs/setup-uuid.md');
+        $this->line('');
+        $this->line('Pass --skip-uuid-check to bypass this check (NOT recommended).');
+
+        return false;
+    }
+
+    protected function detectUsersIdType(string $idColumn): ?string
+    {
+        try {
+            $driver = DB::connection()->getDriverName();
+
+            if ($driver === 'mysql' || $driver === 'mariadb') {
+                $column = DB::selectOne(
+                    'SHOW COLUMNS FROM users WHERE Field = ?',
+                    [$idColumn]
+                );
+
+                if (! $column) {
+                    return null;
+                }
+
+                $type = strtolower($column->Type);
+
+                if (str_contains($type, 'char(36)') || str_contains($type, 'varchar(36)') || $type === 'uuid') {
+                    return 'uuid';
+                }
+
+                if (str_contains($type, 'bigint') || str_contains($type, 'int(')) {
+                    return 'integer';
+                }
+
+                if (str_contains($type, 'char(26)') || str_contains($type, 'varchar(26)')) {
+                    return 'ulid';
+                }
+
+                return $type;
+            }
+
+            if ($driver === 'pgsql') {
+                $column = DB::selectOne(
+                    "SELECT data_type, character_maximum_length
+                     FROM information_schema.columns
+                     WHERE table_name = 'users' AND column_name = ?",
+                    [$idColumn]
+                );
+
+                if (! $column) {
+                    return null;
+                }
+
+                $type = strtolower($column->data_type);
+
+                if ($type === 'uuid') {
+                    return 'uuid';
+                }
+
+                if (in_array($type, ['character', 'character varying'], true)) {
+                    if ((int) $column->character_maximum_length === 36) {
+                        return 'uuid';
+                    }
+                    if ((int) $column->character_maximum_length === 26) {
+                        return 'ulid';
+                    }
+                }
+
+                if (in_array($type, ['bigint', 'integer'], true)) {
+                    return 'integer';
+                }
+
+                return $type;
+            }
+
+            if ($driver === 'sqlite') {
+                $sample = DB::table('users')->select($idColumn)->first();
+                if (! $sample) {
+                    return 'uuid';
+                }
+
+                $value = $sample->{$idColumn} ?? null;
+
+                if (is_int($value)) {
+                    return 'integer';
+                }
+
+                if (is_string($value)) {
+                    if (preg_match('/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i', $value) === 1) {
+                        return 'uuid';
+                    }
+                    if (strlen($value) === 26) {
+                        return 'ulid';
+                    }
+                }
+
+                return 'unknown';
+            }
+
+            return null;
+        } catch (\Throwable $e) {
+            return null;
+        }
     }
 
     protected function seedData(): void
