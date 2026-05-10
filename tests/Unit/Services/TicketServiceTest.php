@@ -10,6 +10,7 @@ use AichaDigital\Laratickets\Models\Ticket;
 use AichaDigital\Laratickets\Models\TicketAssignment;
 use AichaDigital\Laratickets\Models\TicketLevel;
 use AichaDigital\Laratickets\Services\TicketService;
+use AichaDigital\Laratickets\Tests\TestCase;
 
 beforeEach(function () {
     // Create required level and department
@@ -29,7 +30,7 @@ beforeEach(function () {
     // Create a mock user object
     $this->user = new class
     {
-        public int $id = 1;
+        public string $id = TestCase::USER_UUID_1;
     };
 
     // Create mock authorization that allows all actions
@@ -51,13 +52,13 @@ describe('TicketService transaction behavior', function () {
             'user_priority' => Priority::MEDIUM,
             'current_level_id' => $this->level->id,
             'department_id' => $this->department->id,
-            'created_by' => 1,
+            'created_by' => TestCase::USER_UUID_1,
         ]);
 
         // Create an active assignment
         TicketAssignment::create([
             'ticket_id' => $ticket->id,
-            'user_id' => 1,
+            'user_id' => TestCase::USER_UUID_1,
             'assigned_at' => now(),
         ]);
 
@@ -85,19 +86,19 @@ describe('TicketService transaction behavior', function () {
             'user_priority' => Priority::HIGH,
             'current_level_id' => $this->level->id,
             'department_id' => $this->department->id,
-            'created_by' => 1,
+            'created_by' => TestCase::USER_UUID_1,
         ]);
 
         // Create multiple active assignments
         TicketAssignment::create([
             'ticket_id' => $ticket->id,
-            'user_id' => 1,
+            'user_id' => TestCase::USER_UUID_1,
             'assigned_at' => now(),
         ]);
 
         TicketAssignment::create([
             'ticket_id' => $ticket->id,
-            'user_id' => 2,
+            'user_id' => TestCase::USER_UUID_2,
             'assigned_at' => now(),
         ]);
 
@@ -107,7 +108,7 @@ describe('TicketService transaction behavior', function () {
         // Verify ticket is closed
         expect($result->status)->toBe(TicketStatus::CLOSED)
             ->and($result->closed_at)->not->toBeNull()
-            ->and((int) $result->resolved_by)->toBe(1);
+            ->and($result->resolved_by)->toBe(TestCase::USER_UUID_1);
 
         // Verify all assignments are completed
         $activeAssignments = TicketAssignment::where('ticket_id', $ticket->id)
@@ -124,14 +125,15 @@ describe('TicketService transaction behavior', function () {
             'status' => TicketStatus::IN_PROGRESS,
             'current_level_id' => $this->level->id,
             'department_id' => $this->department->id,
-            'created_by' => 1,
+            'created_by' => TestCase::USER_UUID_1,
         ]);
 
-        // Create 3 active assignments
-        for ($i = 1; $i <= 3; $i++) {
+        // Create 3 active assignments (one per deterministic UUID actor)
+        $userUuids = [TestCase::USER_UUID_1, TestCase::USER_UUID_2, TestCase::USER_UUID_3];
+        foreach ($userUuids as $userUuid) {
             TicketAssignment::create([
                 'ticket_id' => $ticket->id,
-                'user_id' => $i,
+                'user_id' => $userUuid,
                 'assigned_at' => now(),
             ]);
         }
@@ -159,7 +161,7 @@ describe('TicketService authorization checks', function () {
             'status' => TicketStatus::IN_PROGRESS,
             'current_level_id' => $this->level->id,
             'department_id' => $this->department->id,
-            'created_by' => 1,
+            'created_by' => TestCase::USER_UUID_1,
         ]);
 
         expect(fn () => $service->cancelTicket($ticket, $this->user))
@@ -178,7 +180,7 @@ describe('TicketService authorization checks', function () {
             'status' => TicketStatus::RESOLVED,
             'current_level_id' => $this->level->id,
             'department_id' => $this->department->id,
-            'created_by' => 1,
+            'created_by' => TestCase::USER_UUID_1,
         ]);
 
         expect(fn () => $service->closeTicket($ticket, $this->user))
@@ -194,7 +196,7 @@ describe('TicketService status transitions', function () {
             'status' => TicketStatus::IN_PROGRESS,
             'current_level_id' => $this->level->id,
             'department_id' => $this->department->id,
-            'created_by' => 1,
+            'created_by' => TestCase::USER_UUID_1,
         ]);
 
         $result = $this->service->updateTicketStatus($ticket, TicketStatus::IN_PROGRESS, $this->user);
@@ -209,7 +211,7 @@ describe('TicketService status transitions', function () {
             'status' => TicketStatus::NEW,
             'current_level_id' => $this->level->id,
             'department_id' => $this->department->id,
-            'created_by' => 1,
+            'created_by' => TestCase::USER_UUID_1,
         ]);
 
         $result = $this->service->updateTicketStatus($ticket, TicketStatus::IN_PROGRESS, $this->user);

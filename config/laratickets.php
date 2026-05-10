@@ -11,22 +11,16 @@ return [
     | User Model Configuration
     |--------------------------------------------------------------------------
     |
-    | Configure the user model and ID type for your application.
-    | Supports: auto, int, uuid, ulid
+    | Laratickets is UUID-first (per ADR-001). The consumer app's `users.id`
+    | column MUST be UUID v7 char(36). bigInteger and ULID are not supported.
     |
-    | - 'auto': Auto-detect from users table (recommended)
-    | - 'int': Standard auto-increment integer
-    | - 'uuid': UUID v7 string (36 chars) - RECOMMENDED for new projects
-    | - 'ulid': ULID string (26 chars)
-    |
-    | Note: uuid_binary was removed in v1.0 due to incompatibility with
-    | FilamentPHP v4 + Livewire. See ADR-002 for migration guide.
+    | See: docs/ADR-001-uuid-first.md
+    | See setup guide: https://github.com/AichaDigital/larabill/blob/main/docs/setup-uuid.md
     |
     */
     'user' => [
         'model' => env('LARATICKETS_USER_MODEL', config('auth.providers.users.model')),
         'id_column' => env('LARATICKETS_USER_ID_COLUMN', 'id'),
-        'id_type' => env('LARATICKETS_USER_ID_TYPE', 'auto'),
     ],
 
     /*

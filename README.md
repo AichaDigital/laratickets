@@ -26,7 +26,7 @@ A comprehensive support ticket management system for Laravel with 4-level escala
 - **Ticket Evaluations**: Global ticket scoring and individual agent ratings
 - **RESTful API**: Full versioned API (v1) with Laravel Sanctum authentication
 - **Flexible Authorization**: Contract-based authorization system, easily adaptable to any permission package
-- **Multi-ID Support**: Works with integer, UUID (v4/v7), UUID binary, and ULID primary keys
+- **UUID-first**: Requires `users.id` UUID v7 char(36). See [setup-uuid.md](https://github.com/AichaDigital/larabill/blob/main/docs/setup-uuid.md) (shared with larabill) for consumer setup. See [ADR-001](docs/ADR-001-uuid-first.md) for rationale.
 - **Event System**: 11 events for complete extensibility
 - **SLA Management**: Configurable SLA hours per level with auto-escalation on breach
 - **Comprehensive Testing**: 25+ tests with 80+ assertions
@@ -61,10 +61,10 @@ The configuration file is published to `config/laratickets.php`:
 
 ```php
 return [
-    // User model configuration
+    // User model configuration (UUID-first; users.id MUST be char(36) UUID v7)
     'user' => [
         'model' => env('LARATICKETS_USER_MODEL', config('auth.providers.users.model')),
-        'id_type' => env('LARATICKETS_USER_ID_TYPE', 'auto'), // auto|int|uuid|ulid
+        'id_column' => env('LARATICKETS_USER_ID_COLUMN', 'id'),
     ],
 
     // Authorization handlers

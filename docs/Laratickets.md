@@ -1130,7 +1130,7 @@ src/
 - Usar morfismo para relaciones con usuarios cuando sea necesario
 - Referenciar `config('auth.providers.users.model')` por defecto
 - Permitir configuración del modelo en config del paquete
-- Soporte para diferentes tipos de ID: integer, UUID v4, UUID v7 (binario y no binario), ULID
+- Tipo de ID: **UUID v7 char(36) exclusivo** (ver [ADR-001](ADR-001-uuid-first.md)). El ecosistema AichaDigital es UUID-first; integer y ULID no se soportan.
 
 **Configuración en config/laratickets.php:**
 
@@ -1138,22 +1138,20 @@ src/
 'user' => [
     'model' => env('LARATICKETS_USER_MODEL', config('auth.providers.users.model')),
     'id_column' => env('LARATICKETS_USER_ID_COLUMN', 'id'),
-    'id_type' => env('LARATICKETS_USER_ID_TYPE', 'auto'), // auto, int, uuid, ulid
 ],
 ```
 
-> **Nota:** `uuid_binary` fue eliminado en v1.0 por incompatibilidad con FilamentPHP v4.
-> Ver ADR-002 para más detalles.
+> **Nota:** `id_type` se eliminó en v0.3.0. El paquete es UUID-first; ver ADR-001.
 
-**Migraciones Adaptables:**
+**Migraciones:**
 
-El paquete usa `MigrationHelper` para crear columnas de usuario de forma agnóstica:
+El paquete usa `MigrationHelper::userIdColumn()` para emitir columnas FK como `char(36)` UUID:
 
 ```php
 use AichaDigital\Laratickets\Support\MigrationHelper;
 
 Schema::create('tickets', function (Blueprint $table) {
-    // Crea columna del tipo correcto según config
+    // Emite columna char(36) UUID
     MigrationHelper::userIdColumn($table, 'created_by');
 
     // ...resto de campos
@@ -1170,7 +1168,6 @@ return [
     'user' => [
         'model' => App\Models\User::class,
         'id_column' => 'id',
-        'id_type' => 'uuid', // UUID v7 string (recomendado)
     ],
     // ...resto configuración
 ];

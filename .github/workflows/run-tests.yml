@@ -65,3 +65,52 @@ jobs:
 
       - name: Execute tests (Pest)
         run: vendor/bin/pest --ci
+
+  mysql-integration:
+    runs-on: ubuntu-latest
+    name: MySQL Integration (PHP 8.3 - L12 - MySQL 8)
+
+    services:
+      mysql:
+        image: mysql:8
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: laratickets_test
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -proot"
+          --health-interval=5s
+          --health-timeout=3s
+          --health-retries=20
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: 8.3
+          extensions: dom, curl, libxml, mbstring, zip, pcntl, pdo, pdo_mysql, bcmath, intl
+          coverage: none
+
+      - name: Install dependencies
+        run: |
+          composer require "laravel/framework:12.*" "orchestra/testbench:10.*" --no-interaction --no-update
+          composer update --prefer-stable --prefer-dist --no-interaction
+
+      - name: Wait for MySQL
+        run: |
+          until mysqladmin ping -h 127.0.0.1 -P 3306 -uroot -proot --silent; do
+            sleep 2
+          done
+
+      - name: Execute MySQL integration tests (Pest)
+        env:
+          LARATICKETS_TEST_MYSQL_HOST: 127.0.0.1
+          LARATICKETS_TEST_MYSQL_PORT: "3306"
+          LARATICKETS_TEST_MYSQL_DATABASE: laratickets_test
+          LARATICKETS_TEST_MYSQL_USERNAME: root
+          LARATICKETS_TEST_MYSQL_PASSWORD: root
+        run: vendor/bin/pest tests/Integration/Mysql/ --ci
