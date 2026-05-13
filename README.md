@@ -24,6 +24,7 @@ A comprehensive support ticket management system for Laravel with 4-level escala
 - **Department Management**: Organize tickets by departments (Technical, Administrative, Commercial)
 - **Risk Assessment**: Level III/IV agents can assess ticket risk with automatic critical escalation
 - **Ticket Evaluations**: Global ticket scoring and individual agent ratings
+- **File Attachments**: Upload/download/delete files attached to tickets. Configurable disk (local/S3/…), mime/size restrictions, role-based authorization via contract. See [ADR-002](docs/ADR-002-ticket-attachments.md).
 - **RESTful API**: Full versioned API (v1) with Laravel Sanctum authentication
 - **Flexible Authorization**: Contract-based authorization system, easily adaptable to any permission package
 - **UUID-first**: Requires `users.id` UUID v7 char(36). See [setup-uuid.md](https://github.com/AichaDigital/larabill/blob/main/docs/setup-uuid.md) (shared with larabill) for consumer setup. See [ADR-001](docs/ADR-001-uuid-first.md) for rationale.

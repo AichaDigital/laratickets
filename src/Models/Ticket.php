@@ -196,6 +196,14 @@ class Ticket extends Model
             ->latest();
     }
 
+    /**
+     * @return HasMany<TicketAttachment, Ticket>
+     */
+    public function attachments(): HasMany
+    {
+        return $this->hasMany(TicketAttachment::class)->orderBy('created_at');
+    }
+
     // Scopes
     /**
      * @param  Builder<Ticket>  $query

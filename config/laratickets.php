@@ -162,4 +162,31 @@ return [
         'auto_assign_strategy' => env('LARATICKETS_AUTO_ASSIGN_STRATEGY', 'round_robin'),
         'max_concurrent_tickets' => env('LARATICKETS_MAX_CONCURRENT_TICKETS', null),
     ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Attachments Configuration (ADR-002)
+    |--------------------------------------------------------------------------
+    |
+    | File attachments on tickets. Storage disk is configurable; defaults to
+    | 'local'. Tipos y tamaños default son restrictivos — apps consumidoras
+    | pueden ampliar los arrays en su .env publicado.
+    |
+    | See: docs/ADR-002-ticket-attachments.md
+    |
+    */
+    'attachments' => [
+        'enabled' => env('LARATICKETS_ATTACHMENTS_ENABLED', true),
+        'disk' => env('LARATICKETS_ATTACHMENTS_DISK', 'local'),
+        'path' => env('LARATICKETS_ATTACHMENTS_PATH', 'ticket-attachments'),
+        'max_file_size_kb' => (int) env('LARATICKETS_ATTACHMENTS_MAX_FILE_KB', 5120),
+        'max_total_size_kb_per_ticket' => (int) env('LARATICKETS_ATTACHMENTS_MAX_TOTAL_KB', 25600),
+        'allowed_mime_types' => [
+            'application/pdf',
+            'image/png',
+            'image/jpeg',
+            'text/plain',
+        ],
+        'allowed_extensions' => ['pdf', 'png', 'jpg', 'jpeg', 'txt', 'log'],
+    ],
 ];

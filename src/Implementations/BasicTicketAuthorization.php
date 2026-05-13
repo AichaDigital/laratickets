@@ -5,9 +5,11 @@ declare(strict_types=1);
 namespace AichaDigital\Laratickets\Implementations;
 
 use AichaDigital\Laratickets\Contracts\TicketAuthorizationContract;
+use AichaDigital\Laratickets\Enums\TicketStatus;
 use AichaDigital\Laratickets\Models\Department;
 use AichaDigital\Laratickets\Models\EscalationRequest;
 use AichaDigital\Laratickets\Models\Ticket;
+use AichaDigital\Laratickets\Models\TicketAttachment;
 use AichaDigital\Laratickets\Models\TicketLevel;
 
 /**
@@ -184,5 +186,58 @@ class BasicTicketAuthorization implements TicketAuthorizationContract
     {
         // Basic implementation: all users can view statistics
         return true;
+    }
+
+    /**
+     * ADR-002 — Creator puede subir si ticket abierto (NEW/ASSIGNED/IN_PROGRESS).
+     * Cualquier otro usuario (proxy: staff) puede subir sin restricción de estado.
+     * Apps reales deben rebindar el contract si necesitan policy más estricta.
+     *
+     * @param  mixed  $user  User model instance
+     */
+    public function canAttachFile($user, Ticket $ticket): bool
+    {
+        $userId = $user->{config('laratickets.user.id_column', 'id')};
+        $isCreator = $userId === $ticket->created_by;
+
+        if ($isCreator) {
+            return in_array($ticket->status, [
+                TicketStatus::NEW,
+                TicketStatus::ASSIGNED,
+                TicketStatus::IN_PROGRESS,
+            ], true);
+        }
+
+        // Cualquier otro user es asumido staff en la implementación basic.
+        return true;
+    }
+
+    /**
+     * ADR-002 — Creator del ticket o cualquier otro user (proxy staff).
+     *
+     * Atención: la basic implementation permite a cualquier user descargar
+     * (igual que otros métodos basic devuelven `true` por defecto). Apps
+     * con role system DEBEN rebindar este método para excluir clientes
+     * ajenos al ticket.
+     *
+     * @param  mixed  $user  User model instance
+     */
+    public function canDownloadFile($user, TicketAttachment $attachment): bool
+    {
+        unset($user, $attachment);
+
+        return true;
+    }
+
+    /**
+     * ADR-002 — Solo el uploader puede borrar su propio attachment.
+     *
+     * @param  mixed  $user  User model instance
+     */
+    public function canDeleteAttachment($user, TicketAttachment $attachment): bool
+    {
+        $userId = $user->{config('laratickets.user.id_column', 'id')};
+
+        return $userId === $attachment->uploader_id;
     }
 }
