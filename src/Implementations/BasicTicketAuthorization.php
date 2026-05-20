@@ -5,12 +5,15 @@ declare(strict_types=1);
 namespace AichaDigital\Laratickets\Implementations;
 
 use AichaDigital\Laratickets\Contracts\TicketAuthorizationContract;
+use AichaDigital\Laratickets\Enums\MessageAuthorRole;
+use AichaDigital\Laratickets\Enums\MessageVisibility;
 use AichaDigital\Laratickets\Enums\TicketStatus;
 use AichaDigital\Laratickets\Models\Department;
 use AichaDigital\Laratickets\Models\EscalationRequest;
 use AichaDigital\Laratickets\Models\Ticket;
 use AichaDigital\Laratickets\Models\TicketAttachment;
 use AichaDigital\Laratickets\Models\TicketLevel;
+use AichaDigital\Laratickets\Models\TicketMessage;
 
 /**
  * Basic authorization implementation without external dependencies
@@ -239,5 +242,67 @@ class BasicTicketAuthorization implements TicketAuthorizationContract
         $userId = $user->{config('laratickets.user.id_column', 'id')};
 
         return $userId === $attachment->uploader_id;
+    }
+
+    /**
+     * ADR-003
+     *
+     * - `CLIENT` role: only the ticket creator can post.
+     * - `STAFF` role: any non-creator user can post.
+     * - Terminal hard states (`CLOSED`, `CANCELLED`) are denied.
+     * - `RESOLVED` is allowed, with no automatic reopen.
+     */
+    public function canPostMessage($user, Ticket $ticket, MessageAuthorRole $role): bool
+    {
+        if (in_array($ticket->status, [TicketStatus::CLOSED, TicketStatus::CANCELLED], true)) {
+            return false;
+        }
+
+        $userId = $user->{config('laratickets.user.id_column', 'id')};
+        $isCreator = $userId === $ticket->created_by;
+
+        return match ($role) {
+            MessageAuthorRole::CLIENT => $isCreator,
+            MessageAuthorRole::STAFF => ! $isCreator,
+        };
+    }
+
+    /**
+     * ADR-003
+     *
+     * Conservative default: internal messages are hidden by default.
+     */
+    public function canViewInternalMessages($user, Ticket $ticket): bool
+    {
+        unset($user, $ticket);
+
+        return false;
+    }
+
+    /**
+     * ADR-003
+     *
+     * Public messages are always visible.
+     * Internal messages require internal visibility entitlement.
+     */
+    public function canViewMessage($user, TicketMessage $message): bool
+    {
+        if ($message->visibility === MessageVisibility::PUBLIC) {
+            return true;
+        }
+
+        return $this->canViewInternalMessages($user, $message->ticket);
+    }
+
+    /**
+     * ADR-003
+     *
+     * Sensitive action; disabled in basic implementation.
+     */
+    public function canRedactMessage($user, TicketMessage $message): bool
+    {
+        unset($user, $message);
+
+        return false;
     }
 }

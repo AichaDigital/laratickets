@@ -2,6 +2,35 @@
 
 All notable changes to `laratickets` will be documented in this file.
 
+## [0.5.1] - 2026-05-20
+
+### Added — Ticket messages API
+
+- Added `GET /api/v1/laratickets/tickets/{id}/messages` to list visible messages for the authenticated viewer.
+- Added `POST /api/v1/laratickets/tickets/{id}/messages` to post a message.
+- Added `POST /api/v1/laratickets/tickets/{id}/messages/{message_id}/redact` to redact message body.
+- Added `StoreTicketMessageRequest`, `RedactTicketMessageRequest`, `TicketMessageResource`, and `TicketMessageController` to keep message concerns in package API surface.
+
+## [0.5.0] - 2026-05-20
+
+### Added — Ticket messages (ADR-003)
+
+- New migration `2026_05_20_000001_create_ticket_messages_table.php`.
+- New model `TicketMessage` (`ticket_messages` table) with `author_id`, `author_role`, `visibility`, `body`, redact fields.
+- New enums `MessageAuthorRole` (`client` | `staff`) and `MessageVisibility` (`public` | `internal`).
+- New service `TicketMessageService` with `post()`, `listFor()`, `redact()`.
+- New event `TicketMessagePosted` dispatched after posting.
+- `TicketAuthorizationContract` extended with `canPostMessage`, `canViewInternalMessages`, `canViewMessage`, `canRedactMessage`.
+- `BasicTicketAuthorization` default implementation for message operations (conservative internal visibility).
+- `Ticket` gains `messages()` and `publicMessages()` relations.
+- Config `messages.*`: `enabled` and `max_body_length`.
+- New test suite `tests/Unit/Services/TicketMessageServiceTest.php` covering happy path, validation, auth gating, visibility filter and redact idempotency.
+
+### Versioning note
+
+- This change adds 4 new methods to `TicketAuthorizationContract` and is source-incompatible with consumers that implement the contract directly without adding them. Consumers extending `BasicTicketAuthorization` keep compatibility.
+- Consumers must run migrations after `composer update`.
+
 ## [0.4.0] - 2026-05-13
 
 ### Added — Ticket attachments (ADR-002)
@@ -56,4 +85,3 @@ See [ADR-001](docs/ADR-001-uuid-first.md) for rationale and [larabill setup-uuid
 ### Changed
 
 - `tests/Unit/Services/TicketServiceTest.php`: int fixtures `'created_by' => 1`, `'user_id' => N` migrated to deterministic UUID constants `TestCase::USER_UUID_{1,2,3}`.
-

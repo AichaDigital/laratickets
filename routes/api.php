@@ -6,6 +6,7 @@ use AichaDigital\Laratickets\Http\Controllers\Api\EscalationController;
 use AichaDigital\Laratickets\Http\Controllers\Api\EvaluationController;
 use AichaDigital\Laratickets\Http\Controllers\Api\RiskAssessmentController;
 use AichaDigital\Laratickets\Http\Controllers\Api\TicketController;
+use AichaDigital\Laratickets\Http\Controllers\Api\TicketMessageController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -22,6 +23,9 @@ Route::prefix('api/v1/laratickets')
         Route::post('tickets/{ticket}/close', [TicketController::class, 'close'])->name('tickets.close');
         Route::post('tickets/{ticket}/resolve', [TicketController::class, 'resolve'])->name('tickets.resolve');
         Route::post('tickets/{ticket}/cancel', [TicketController::class, 'cancel'])->name('tickets.cancel');
+        Route::get('tickets/{ticket}/messages', [TicketMessageController::class, 'index'])->name('tickets.messages.index');
+        Route::post('tickets/{ticket}/messages', [TicketMessageController::class, 'store'])->name('tickets.messages.store');
+        Route::post('tickets/{ticket}/messages/{message}/redact', [TicketMessageController::class, 'redact'])->name('tickets.messages.redact');
 
         // Escalations
         Route::post('tickets/{ticket}/escalations', [EscalationController::class, 'store'])->name('escalations.store');

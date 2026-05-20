@@ -6,10 +6,12 @@ namespace AichaDigital\Laratickets\Models;
 
 use AichaDigital\Laratickets\Concerns\HasUserRelation;
 use AichaDigital\Laratickets\Concerns\HasUuid;
+use AichaDigital\Laratickets\Enums\MessageVisibility;
 use AichaDigital\Laratickets\Enums\Priority;
 use AichaDigital\Laratickets\Enums\RiskLevel;
 use AichaDigital\Laratickets\Enums\TicketStatus;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -42,6 +44,8 @@ use Illuminate\Support\Carbon;
  * @property-read Department $department
  * @property-read Model $creator
  * @property-read Model|null $resolver
+ * @property-read Collection<int, TicketMessage> $messages
+ * @property-read Collection<int, TicketMessage> $publicMessages
  */
 class Ticket extends Model
 {
@@ -202,6 +206,22 @@ class Ticket extends Model
     public function attachments(): HasMany
     {
         return $this->hasMany(TicketAttachment::class)->orderBy('created_at');
+    }
+
+    /**
+     * @return HasMany<TicketMessage, Ticket>
+     */
+    public function messages(): HasMany
+    {
+        return $this->hasMany(TicketMessage::class)->orderBy('created_at')->orderBy('id');
+    }
+
+    /**
+     * @return HasMany<TicketMessage, Ticket>
+     */
+    public function publicMessages(): HasMany
+    {
+        return $this->messages()->where('visibility', MessageVisibility::PUBLIC->value);
     }
 
     // Scopes
