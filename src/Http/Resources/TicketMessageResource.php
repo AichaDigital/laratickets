@@ -23,12 +23,12 @@ class TicketMessageResource extends JsonResource
             'ticket_id' => $this->ticket_id,
             'author_id' => $this->author_id,
             'author_role' => [
-                'value' => $this->author_role?->value,
-                'label' => $this->author_role?->label(),
+                'value' => $this->author_role->value,
+                'label' => $this->author_role->label(),
             ],
             'visibility' => [
-                'value' => $this->visibility?->value,
-                'label' => $this->visibility?->label(),
+                'value' => $this->visibility->value,
+                'label' => $this->visibility->label(),
             ],
             'body' => $this->body,
             'is_redacted' => $this->isRedacted(),
