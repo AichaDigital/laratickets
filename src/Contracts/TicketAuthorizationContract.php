@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 namespace AichaDigital\Laratickets\Contracts;
 
+use AichaDigital\Laratickets\Enums\MessageAuthorRole;
 use AichaDigital\Laratickets\Models\Department;
 use AichaDigital\Laratickets\Models\EscalationRequest;
 use AichaDigital\Laratickets\Models\Ticket;
 use AichaDigital\Laratickets\Models\TicketAttachment;
 use AichaDigital\Laratickets\Models\TicketLevel;
+use AichaDigital\Laratickets\Models\TicketMessage;
 
 interface TicketAuthorizationContract
 {
@@ -118,4 +120,25 @@ interface TicketAuthorizationContract
      * @param  mixed  $user  User model instance
      */
     public function canDeleteAttachment($user, TicketAttachment $attachment): bool;
+
+    // Message operations (ADR-003)
+    /**
+     * @param  mixed  $user  User model instance
+     */
+    public function canPostMessage($user, Ticket $ticket, MessageAuthorRole $role): bool;
+
+    /**
+     * @param  mixed  $user  User model instance
+     */
+    public function canViewInternalMessages($user, Ticket $ticket): bool;
+
+    /**
+     * @param  mixed  $user  User model instance
+     */
+    public function canViewMessage($user, TicketMessage $message): bool;
+
+    /**
+     * @param  mixed  $user  User model instance
+     */
+    public function canRedactMessage($user, TicketMessage $message): bool;
 }

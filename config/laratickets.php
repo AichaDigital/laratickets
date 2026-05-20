@@ -189,4 +189,19 @@ return [
         ],
         'allowed_extensions' => ['pdf', 'png', 'jpg', 'jpeg', 'txt', 'log'],
     ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Messages Configuration (ADR-003)
+    |--------------------------------------------------------------------------
+    |
+    | Messages are conversation entries stored at ticket level.
+    | Visibility is additive from day one because internal notes can be added
+    | in a later ADR without schema changes.
+    |
+    */
+    'messages' => [
+        'enabled' => env('LARATICKETS_MESSAGES_ENABLED', true),
+        'max_body_length' => (int) env('LARATICKETS_MESSAGES_MAX_BODY', 5000),
+    ],
 ];
