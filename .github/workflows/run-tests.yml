@@ -41,10 +41,10 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
 
       - name: Setup PHP
-        uses: shivammathur/setup-php@v2
+        uses: shivammathur/setup-php@7c071dfe9dc99bdf297fa79cb49ea005b9fcadbc # v2
         with:
           php-version: ${{ matrix.php }}
           extensions: dom, curl, libxml, mbstring, zip, pcntl, pdo, sqlite, pdo_sqlite, bcmath, soap, intl, gd, exif, iconv
@@ -68,11 +68,11 @@ jobs:
 
   mysql-integration:
     runs-on: ubuntu-latest
-    name: MySQL Integration (PHP 8.3 - L12 - MySQL 8)
+    name: MySQL Integration (PHP 8.3 - L12 - MySQL 9)
 
     services:
       mysql:
-        image: mysql:8
+        image: mysql:9@sha256:c11782aa2a96624c1efc121768641d96954faa136d6aa82751b032d8c426ffbc
         env:
           MYSQL_ROOT_PASSWORD: root
           MYSQL_DATABASE: laratickets_test
@@ -86,10 +86,10 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
 
       - name: Setup PHP
-        uses: shivammathur/setup-php@v2
+        uses: shivammathur/setup-php@7c071dfe9dc99bdf297fa79cb49ea005b9fcadbc # v2
         with:
           php-version: 8.3
           extensions: dom, curl, libxml, mbstring, zip, pcntl, pdo, pdo_mysql, bcmath, intl
