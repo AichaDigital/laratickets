@@ -116,6 +116,47 @@ POST /tickets/{id}/cancel
 
 **Response:** `200 OK`
 
+## Messages
+
+### List Ticket Messages
+
+```http
+GET /tickets/{id}/messages
+```
+
+**Response:** `200 OK`
+
+### Post Message
+
+```http
+POST /tickets/{id}/messages
+```
+
+**Body:**
+```json
+{
+  "body": "string (required)",
+  "author_role": "client|staff (required)"
+}
+```
+
+**Response:** `201 Created`
+
+### Redact Message
+
+```http
+POST /tickets/{id}/messages/{message_id}/redact
+```
+
+**Body:**
+```json
+{
+  "reason": "string (required)"
+}
+```
+
+**Response:** `200 OK`
+
 ## Escalations
 
 ### Request Escalation
