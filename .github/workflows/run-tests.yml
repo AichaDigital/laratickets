@@ -68,11 +68,11 @@ jobs:
 
   mysql-integration:
     runs-on: ubuntu-latest
-    name: MySQL Integration (PHP 8.3 - L12 - MySQL 9)
+    name: MySQL Integration (PHP 8.3 - L12 - MySQL 8.4)
 
     services:
       mysql:
-        image: mysql:9@sha256:c11782aa2a96624c1efc121768641d96954faa136d6aa82751b032d8c426ffbc
+        image: mysql:8.4@sha256:c36050afdca850f23cef85703f84c7531a5ae155a11b5ee1c60acb09937c4084
         env:
           MYSQL_ROOT_PASSWORD: root
           MYSQL_DATABASE: laratickets_test
