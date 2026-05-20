@@ -67,7 +67,6 @@ class TicketMessageService
      */
     /**
      * @param  mixed  $viewer
-     *
      * @return Collection<int, TicketMessage>
      */
     public function listFor(Ticket $ticket, $viewer): Collection
