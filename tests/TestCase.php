@@ -75,5 +75,8 @@ class TestCase extends Orchestra
 
         $migration = include __DIR__.'/../database/migrations/2026_05_20_000001_create_ticket_messages_table.php';
         $migration->up();
+
+        $migration = include __DIR__.'/../database/migrations/2026_05_21_000001_add_mailbox_email_to_departments_table.php';
+        $migration->up();
     }
 }

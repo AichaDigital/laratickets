@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace AichaDigital\Laratickets;
 
 use AichaDigital\Laratickets\Commands\InstallCommand;
-use AichaDigital\Laratickets\Contracts\NotificationContract;
 use AichaDigital\Laratickets\Contracts\TicketAuthorizationContract;
 use AichaDigital\Laratickets\Contracts\UserCapabilityContract;
+use AichaDigital\Laratickets\Notifications\RecipientResolver;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
 
@@ -50,8 +50,8 @@ class LaraticketsServiceProvider extends PackageServiceProvider
         );
 
         $this->app->bind(
-            NotificationContract::class,
-            fn () => app(config('laratickets.notifications.handler'))
+            RecipientResolver::class,
+            fn () => app(config('laratickets.notifications.recipient_resolver'))
         );
     }
 }

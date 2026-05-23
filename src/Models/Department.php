@@ -14,6 +14,7 @@ use Illuminate\Support\Carbon;
  * @property int $id
  * @property string $name
  * @property string|null $description
+ * @property string|null $mailbox_email
  * @property bool $active
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
@@ -25,6 +26,7 @@ class Department extends Model
     protected $fillable = [
         'name',
         'description',
+        'mailbox_email',
         'active',
     ];
 

@@ -3,7 +3,7 @@
 declare(strict_types=1);
 use AichaDigital\Laratickets\Implementations\BasicTicketAuthorization;
 use AichaDigital\Laratickets\Implementations\BasicUserCapabilityHandler;
-use AichaDigital\Laratickets\Implementations\DefaultNotificationHandler;
+use AichaDigital\Laratickets\Notifications\DefaultRecipientResolver;
 
 return [
     /*
@@ -48,25 +48,18 @@ return [
     | Notification Configuration
     |--------------------------------------------------------------------------
     |
-    | Configure notification handler and channels for different events.
+    | Configure the recipient resolver — the contract the Core uses to answer
+    | "who must be notified for this ticket event?". The default resolver
+    | covers OPENED, STAFF_REPLIED, CLIENT_REPLIED (with department-mailbox
+    | fallback) and CLOSED. The consumer may swap in its own implementation by
+    | pointing this to a class implementing `RecipientResolver`.
     |
     */
     'notifications' => [
-        'handler' => env(
-            'LARATICKETS_NOTIFICATION_HANDLER',
-            DefaultNotificationHandler::class
+        'recipient_resolver' => env(
+            'LARATICKETS_RECIPIENT_RESOLVER',
+            DefaultRecipientResolver::class
         ),
-        'enabled' => env('LARATICKETS_NOTIFICATIONS_ENABLED', true),
-        'channels' => [
-            'ticket_created' => ['mail', 'database'],
-            'ticket_assigned' => ['mail', 'database'],
-            'escalation_requested' => ['mail', 'database'],
-            'escalation_approved' => ['mail', 'database'],
-            'escalation_rejected' => ['mail', 'database'],
-            'ticket_closed' => ['mail', 'database'],
-            'evaluation_received' => ['database'],
-            'sla_breached' => ['mail', 'database'],
-        ],
     ],
 
     /*

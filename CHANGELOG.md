@@ -2,6 +2,37 @@
 
 All notable changes to `laratickets` will be documented in this file.
 
+## [0.6.0] - 2026-05-23
+
+### Added — Core recipient routing
+
+- New enum `TicketEvent` (`OPENED`, `STAFF_REPLIED`, `CLIENT_REPLIED`, `CLOSED`) — the routable-event dimension.
+- New value object `Notifications\Recipient` — tagged union: `Recipient::user($id)` or `Recipient::mailbox($email)`. The Core never loads the consumer's User model; the consumer dispatches.
+- New contract `Notifications\RecipientResolver` and default implementation `Notifications\DefaultRecipientResolver`. The default routing:
+  - `OPENED` → `[creator, department mailbox]`
+  - `STAFF_REPLIED` → `[creator]`
+  - `CLIENT_REPLIED` → `[active agent]` if any, else `[department mailbox]`
+  - `CLOSED` → `[creator]`
+- New typed exception `Exceptions\MissingDepartmentMailboxException` — thrown when the resolver needs the mailbox but `Department.mailbox_email` is unset (no silent failure).
+- New migration `2026_05_21_000001_add_mailbox_email_to_departments_table.php` — adds `string('mailbox_email')->nullable()` to `departments`.
+- `Department` gains `mailbox_email` (fillable + docblock).
+- `Ticket::recipientsFor(TicketEvent): array` — consumer-facing surface that delegates to the bound resolver, replacing the per-event listeners that re-derived recipients by hand.
+- Config: `notifications.recipient_resolver` replaces the previous `notifications.handler` (and the orphan `notifications.enabled` / `notifications.channels`).
+
+### Removed
+
+- `Contracts\NotificationContract` and `Implementations\DefaultNotificationHandler`. Both were vestigial: no Service ever invoked the contract, and the handler only emitted `Log::info`. Routing now lives in `RecipientResolver`.
+
+### Versioning note
+
+- **Breaking for consumers that implemented `NotificationContract` directly.** None of the package's own Services depended on it, so behavior under the default config is unchanged.
+- Consumers with a published `config/laratickets.php` must re-publish: the `notifications` block changed shape. The stale `DefaultNotificationHandler::class` reference left behind is inert (`::class` is a compile-time string and the package no longer reads `notifications.handler`).
+- Consumers must run migrations after `composer update`.
+
+### Note on prior version drift
+
+- Git tags only go up to `v0.4.0`, but this CHANGELOG records untagged releases `0.5.0` (messages model) and `0.5.1` (messages API). Those tags are missing from the repository; left as observed drift, outside this refactor's scope.
+
 ## [0.5.1] - 2026-05-20
 
 ### Added — Ticket messages API

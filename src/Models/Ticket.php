@@ -9,7 +9,11 @@ use AichaDigital\Laratickets\Concerns\HasUuid;
 use AichaDigital\Laratickets\Enums\MessageVisibility;
 use AichaDigital\Laratickets\Enums\Priority;
 use AichaDigital\Laratickets\Enums\RiskLevel;
+use AichaDigital\Laratickets\Enums\TicketEvent;
 use AichaDigital\Laratickets\Enums\TicketStatus;
+use AichaDigital\Laratickets\Exceptions\MissingDepartmentMailboxException;
+use AichaDigital\Laratickets\Notifications\Recipient;
+use AichaDigital\Laratickets\Notifications\RecipientResolver;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -329,5 +333,19 @@ class Ticket extends Model
             'global_score' => $avgScore,
             'total_evaluations' => $this->evaluations()->count(),
         ]);
+    }
+
+    /**
+     * Recipients to notify for a routable ticket event. Delegates to the
+     * `RecipientResolver` bound in the container so the consumer can swap the
+     * default routing via `config('laratickets.notifications.recipient_resolver')`.
+     *
+     * @return list<Recipient>
+     *
+     * @throws MissingDepartmentMailboxException
+     */
+    public function recipientsFor(TicketEvent $event): array
+    {
+        return app(RecipientResolver::class)->resolve($this, $event);
     }
 }
