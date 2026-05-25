@@ -15,6 +15,7 @@ use Illuminate\Support\Carbon;
  * @property string $name
  * @property string|null $description
  * @property string|null $mailbox_email
+ * @property string|null $head_user_id
  * @property bool $active
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
@@ -27,6 +28,7 @@ class Department extends Model
         'name',
         'description',
         'mailbox_email',
+        'head_user_id',
         'active',
     ];
 

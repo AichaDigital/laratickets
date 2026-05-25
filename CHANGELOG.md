@@ -2,6 +2,29 @@
 
 All notable changes to `laratickets` will be documented in this file.
 
+## [0.7.0] - 2026-05-25
+
+### Added — Department head as primary routing target
+
+- New column `departments.head_user_id` (UUID v7, nullable, indexed) — a soft FK to the consumer's users table emitted via `MigrationHelper::userIdColumn()` (no DB constraint, Core stays agnostic to the consumer's users schema).
+- New migration `2026_05_25_000001_add_head_user_id_to_departments_table.php`.
+- `Department` gains `head_user_id` (fillable + docblock).
+- `DefaultRecipientResolver` now resolves the department recipient in priority order:
+  1. `head_user_id` → `Recipient::user($head_user_id)` (User, notifiable by the consumer)
+  2. `mailbox_email` → `Recipient::mailbox($email)` (plain email fallback)
+  3. Neither set → `MissingDepartmentMailboxException`
+- Private helper renamed `departmentMailbox()` → `departmentRecipient()` to reflect the widened semantics.
+
+### Changed
+
+- `MissingDepartmentMailboxException` message widened to mention both `head_user_id` and `mailbox_email`. Class name kept for backwards compatibility with v0.6.x consumers that catch this exception.
+
+### Versioning note
+
+- **Non-breaking for consumers on v0.6.x with `mailbox_email` populated.** The fallback behavior is preserved when `head_user_id` is null.
+- Consumers must run migrations after `composer update` to add the new column.
+- Closes the DECISIÓN ABIERTA #1 of the v0.6.0 wishlist (option b: dept head as User reference). Watchers (option c) remain out of scope; the `recipientsFor()` array shape allows a future additive migration if demand emerges.
+
 ## [0.6.0] - 2026-05-23
 
 ### Added — Core recipient routing
