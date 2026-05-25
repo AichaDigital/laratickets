@@ -16,13 +16,18 @@ use AichaDigital\Laratickets\Tests\TestCase;
 
 /**
  * Routing matrix for the four in-scope `TicketEvent`s:
- *   OPENED          → [creator, mailbox]
+ *   OPENED          → [creator, department recipient]
  *   STAFF_REPLIED   → [creator]
- *   CLIENT_REPLIED  → [active agent] if any, else [mailbox]
+ *   CLIENT_REPLIED  → [active agent] if any, else [department recipient]
  *   CLOSED          → [creator]
  *
- * Invariant: never returns []; if a mailbox is required but missing,
- * `MissingDepartmentMailboxException` is thrown.
+ * The "department recipient" is resolved in priority order:
+ *   1. `Department.head_user_id` → `Recipient::user($head_user_id)`
+ *   2. `Department.mailbox_email` → `Recipient::mailbox($email)`
+ *   3. Neither set → `MissingDepartmentMailboxException`
+ *
+ * Invariant: never returns []; if the department has no head and no
+ * mailbox, the exception is thrown rather than silently dropping.
  */
 beforeEach(function () {
     $this->resolver = new DefaultRecipientResolver;
@@ -96,11 +101,38 @@ describe('CLIENT_REPLIED', function () {
             ->and($recipients[0]->email)->toBe('tech@example.test');
     });
 
-    it('throws MissingDepartmentMailboxException when fallback is required but the department has no mailbox', function () {
-        $this->department->update(['mailbox_email' => null]);
+    it('routes to the department head when set and no agent is assigned', function () {
+        $this->department->update(['head_user_id' => TestCase::USER_UUID_3]);
+
+        $recipients = $this->resolver->resolve($this->ticket->fresh(), TicketEvent::CLIENT_REPLIED);
+
+        expect($recipients)->toHaveCount(1)
+            ->and($recipients[0]->isUser())->toBeTrue()
+            ->and($recipients[0]->userId)->toBe(TestCase::USER_UUID_3);
+    });
+
+    it('prefers the head over the mailbox when both are set', function () {
+        $this->department->update(['head_user_id' => TestCase::USER_UUID_3]);
+
+        $recipients = $this->resolver->resolve($this->ticket->fresh(), TicketEvent::CLIENT_REPLIED);
+
+        expect($recipients[0]->isUser())->toBeTrue()
+            ->and($recipients[0]->userId)->toBe(TestCase::USER_UUID_3);
+    });
+
+    it('falls back to mailbox when head is not set but mailbox is', function () {
+        // No head_user_id; mailbox_email already set in beforeEach.
+        $recipients = $this->resolver->resolve($this->ticket->fresh(), TicketEvent::CLIENT_REPLIED);
+
+        expect($recipients[0]->isMailbox())->toBeTrue()
+            ->and($recipients[0]->email)->toBe('tech@example.test');
+    });
+
+    it('throws MissingDepartmentMailboxException when neither head nor mailbox is set', function () {
+        $this->department->update(['head_user_id' => null, 'mailbox_email' => null]);
 
         expect(fn () => $this->resolver->resolve($this->ticket->fresh(), TicketEvent::CLIENT_REPLIED))
-            ->toThrow(MissingDepartmentMailboxException::class, 'mailbox_email');
+            ->toThrow(MissingDepartmentMailboxException::class);
     });
 });
 
@@ -113,6 +145,18 @@ describe('OPENED', function () {
             ->and($recipients[0]->userId)->toBe(TestCase::USER_UUID_1)
             ->and($recipients[1]->isMailbox())->toBeTrue()
             ->and($recipients[1]->email)->toBe('tech@example.test');
+    });
+
+    it('routes to the creator and the department head when head is set', function () {
+        $this->department->update(['head_user_id' => TestCase::USER_UUID_3]);
+
+        $recipients = $this->resolver->resolve($this->ticket->fresh(), TicketEvent::OPENED);
+
+        expect($recipients)->toHaveCount(2)
+            ->and($recipients[0]->isUser())->toBeTrue()
+            ->and($recipients[0]->userId)->toBe(TestCase::USER_UUID_1)
+            ->and($recipients[1]->isUser())->toBeTrue()
+            ->and($recipients[1]->userId)->toBe(TestCase::USER_UUID_3);
     });
 });
 

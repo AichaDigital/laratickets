@@ -78,5 +78,8 @@ class TestCase extends Orchestra
 
         $migration = include __DIR__.'/../database/migrations/2026_05_21_000001_add_mailbox_email_to_departments_table.php';
         $migration->up();
+
+        $migration = include __DIR__.'/../database/migrations/2026_05_25_000001_add_head_user_id_to_departments_table.php';
+        $migration->up();
     }
 }
