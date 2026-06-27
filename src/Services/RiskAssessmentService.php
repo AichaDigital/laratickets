@@ -8,10 +8,13 @@ use AichaDigital\Laratickets\Contracts\TicketAuthorizationContract;
 use AichaDigital\Laratickets\Contracts\UserCapabilityContract;
 use AichaDigital\Laratickets\Enums\RiskLevel;
 use AichaDigital\Laratickets\Events\RiskAssessed;
+use AichaDigital\Laratickets\Exceptions\TicketAuthorizationException;
+use AichaDigital\Laratickets\Exceptions\TicketStateException;
 use AichaDigital\Laratickets\Models\EscalationRequest;
 use AichaDigital\Laratickets\Models\RiskAssessment;
 use AichaDigital\Laratickets\Models\Ticket;
 use AichaDigital\Laratickets\Models\TicketLevel;
+use AichaDigital\Laratickets\Support\ActorId;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
@@ -26,34 +29,34 @@ class RiskAssessmentService
     /**
      * Assess risk for a ticket
      *
-     * @param  mixed  $assessor  User model instance (type is configurable via config('laratickets.user.model'))
+     * @param  mixed  $by  User model instance (type is configurable via config('laratickets.user.model'))
      */
     public function assessRisk(
         Ticket $ticket,
-        $assessor,
+        $by,
         RiskLevel $riskLevel,
         string $justification
     ): RiskAssessment {
         if (! config('laratickets.risk_assessment.enabled', true)) {
-            throw new \RuntimeException('Risk assessment system is disabled');
+            throw new TicketStateException('Risk assessment system is disabled');
         }
 
-        if (! $this->authorization->canAssessRisk($assessor, $ticket)) {
-            throw new \RuntimeException('User is not authorized to assess risk for this ticket');
+        if (! $this->authorization->canAssessRisk($by, $ticket)) {
+            throw new TicketAuthorizationException('User is not authorized to assess risk for this ticket');
         }
 
         // Verify assessor has required level
-        $assessorLevel = $this->userCapability->getUserLevel($assessor);
+        $byLevel = $this->userCapability->getUserLevel($by);
         $requiredLevels = config('laratickets.risk_assessment.required_levels', [3, 4]);
 
-        if (! $assessorLevel || ! in_array($assessorLevel->level, $requiredLevels)) {
-            throw new \RuntimeException('User does not have required level to assess risk');
+        if (! $byLevel || ! in_array($byLevel->level, $requiredLevels)) {
+            throw new TicketStateException('User does not have required level to assess risk');
         }
 
-        return DB::transaction(function () use ($ticket, $assessor, $riskLevel, $justification) {
+        return DB::transaction(function () use ($ticket, $by, $riskLevel, $justification) {
             $assessment = RiskAssessment::create([
                 'ticket_id' => $ticket->id,
-                'assessor_id' => $assessor->{config('laratickets.user.id_column', 'id')},
+                'assessor_id' => ActorId::of($by),
                 'risk_level' => $riskLevel,
                 'justification' => $justification,
             ]);
@@ -65,7 +68,7 @@ class RiskAssessmentService
 
             // Auto-escalate if critical and enabled
             if ($assessment->shouldAutoEscalate() && config('laratickets.risk_assessment.auto_escalate_on_critical', true)) {
-                $this->escalateByRisk($ticket, $assessor);
+                $this->escalateByRisk($ticket, $by);
             }
 
             return $assessment;
@@ -116,9 +119,9 @@ class RiskAssessmentService
     /**
      * Escalate ticket by risk
      *
-     * @param  mixed  $assessor  User model instance (type is configurable via config('laratickets.user.model'))
+     * @param  mixed  $by  User model instance (type is configurable via config('laratickets.user.model'))
      */
-    public function escalateByRisk(Ticket $ticket, $assessor): void
+    public function escalateByRisk(Ticket $ticket, $by): void
     {
         if (! $ticket->currentLevel->can_escalate) {
             return;
@@ -135,7 +138,7 @@ class RiskAssessmentService
             $ticket,
             $nextLevel,
             'Automatic escalation due to critical risk assessment',
-            $assessor,
+            $by,
             true
         );
 

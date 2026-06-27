@@ -12,6 +12,7 @@ use AichaDigital\Laratickets\Events\TicketStatusChanged;
 use AichaDigital\Laratickets\Exceptions\TicketAuthorizationException;
 use AichaDigital\Laratickets\Models\Ticket;
 use AichaDigital\Laratickets\Models\TicketLevel;
+use AichaDigital\Laratickets\Support\ActorId;
 use Illuminate\Support\Facades\DB;
 
 class TicketService
@@ -24,15 +25,15 @@ class TicketService
      * Create a new ticket
      *
      * @param  array<string, mixed>  $data
-     * @param  mixed  $creator  User model instance (type is configurable via config('laratickets.user.model'))
+     * @param  mixed  $by  User model instance (type is configurable via config('laratickets.user.model'))
      */
-    public function createTicket(array $data, $creator): Ticket
+    public function createTicket(array $data, $by): Ticket
     {
-        if (! $this->authorization->canCreateTicket($creator)) {
+        if (! $this->authorization->canCreateTicket($by)) {
             throw new TicketAuthorizationException('User is not authorized to create tickets');
         }
 
-        return DB::transaction(function () use ($data, $creator) {
+        return DB::transaction(function () use ($data, $by) {
             $levelOne = TicketLevel::where('level', 1)->firstOrFail();
 
             $ticket = Ticket::create([
@@ -41,7 +42,7 @@ class TicketService
                 'user_priority' => $data['priority'] ?? 'medium',
                 'department_id' => $data['department_id'],
                 'current_level_id' => $levelOne->id,
-                'created_by' => $creator->{config('laratickets.user.id_column', 'id')},
+                'created_by' => ActorId::of($by),
                 'status' => TicketStatus::NEW,
                 'estimated_deadline' => now()->addHours($levelOne->default_sla_hours),
             ]);
@@ -55,11 +56,11 @@ class TicketService
     /**
      * Update ticket status
      *
-     * @param  mixed  $user  User model instance (type is configurable via config('laratickets.user.model'))
+     * @param  mixed  $by  User model instance (type is configurable via config('laratickets.user.model'))
      */
-    public function updateTicketStatus(Ticket $ticket, TicketStatus $newStatus, $user): Ticket
+    public function updateTicketStatus(Ticket $ticket, TicketStatus $newStatus, $by): Ticket
     {
-        if (! $this->authorization->canUpdateTicket($user, $ticket)) {
+        if (! $this->authorization->canUpdateTicket($by, $ticket)) {
             throw new TicketAuthorizationException('User is not authorized to update this ticket');
         }
 
@@ -79,19 +80,19 @@ class TicketService
     /**
      * Close a ticket
      *
-     * @param  mixed  $resolver  User model instance (type is configurable via config('laratickets.user.model'))
+     * @param  mixed  $by  User model instance (type is configurable via config('laratickets.user.model'))
      */
-    public function closeTicket(Ticket $ticket, $resolver): Ticket
+    public function closeTicket(Ticket $ticket, $by): Ticket
     {
-        if (! $this->authorization->canCloseTicket($resolver, $ticket)) {
+        if (! $this->authorization->canCloseTicket($by, $ticket)) {
             throw new TicketAuthorizationException('User is not authorized to close this ticket');
         }
 
-        return DB::transaction(function () use ($ticket, $resolver) {
+        return DB::transaction(function () use ($ticket, $by) {
             $ticket->update([
                 'status' => TicketStatus::CLOSED,
                 'closed_at' => now(),
-                'resolved_by' => $resolver->{config('laratickets.user.id_column', 'id')},
+                'resolved_by' => ActorId::of($by),
             ]);
 
             // Complete all active assignments
@@ -106,18 +107,18 @@ class TicketService
     /**
      * Resolve a ticket
      *
-     * @param  mixed  $resolver  User model instance (type is configurable via config('laratickets.user.model'))
+     * @param  mixed  $by  User model instance (type is configurable via config('laratickets.user.model'))
      */
-    public function resolveTicket(Ticket $ticket, $resolver): Ticket
+    public function resolveTicket(Ticket $ticket, $by): Ticket
     {
-        if (! $this->authorization->canUpdateTicket($resolver, $ticket)) {
+        if (! $this->authorization->canUpdateTicket($by, $ticket)) {
             throw new TicketAuthorizationException('User is not authorized to resolve this ticket');
         }
 
         $ticket->update([
             'status' => TicketStatus::RESOLVED,
             'resolved_at' => now(),
-            'resolved_by' => $resolver->{config('laratickets.user.id_column', 'id')},
+            'resolved_by' => ActorId::of($by),
         ]);
 
         return $ticket->fresh();
@@ -128,11 +129,11 @@ class TicketService
      *
      * Uses database transaction for atomicity.
      *
-     * @param  mixed  $user  User model instance (type is configurable via config('laratickets.user.model'))
+     * @param  mixed  $by  User model instance (type is configurable via config('laratickets.user.model'))
      */
-    public function cancelTicket(Ticket $ticket, $user, ?string $reason = null): Ticket
+    public function cancelTicket(Ticket $ticket, $by, ?string $reason = null): Ticket
     {
-        if (! $this->authorization->canUpdateTicket($user, $ticket)) {
+        if (! $this->authorization->canUpdateTicket($by, $ticket)) {
             throw new TicketAuthorizationException('User is not authorized to cancel this ticket');
         }
 

@@ -148,7 +148,7 @@ class EscalationRequest extends Model
         return $this->status === 'rejected';
     }
 
-    public function approve(int $approverId): void
+    public function approve(mixed $approverId): void
     {
         $this->update([
             'status' => 'approved',
@@ -157,7 +157,7 @@ class EscalationRequest extends Model
         ]);
     }
 
-    public function reject(int $approverId, string $reason): void
+    public function reject(mixed $approverId, string $reason): void
     {
         $this->update([
             'status' => 'rejected',

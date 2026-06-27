@@ -81,5 +81,8 @@ class TestCase extends Orchestra
 
         $migration = include __DIR__.'/../database/migrations/2026_05_25_000001_add_head_user_id_to_departments_table.php';
         $migration->up();
+
+        $migration = include __DIR__.'/../database/migrations/2026_06_27_000001_make_escalation_requests_requester_id_nullable.php';
+        $migration->up();
     }
 }

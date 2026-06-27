@@ -13,6 +13,7 @@ use AichaDigital\Laratickets\Exceptions\TicketMessageRejected;
 use AichaDigital\Laratickets\Exceptions\TicketStateException;
 use AichaDigital\Laratickets\Models\Ticket;
 use AichaDigital\Laratickets\Models\TicketMessage;
+use AichaDigital\Laratickets\Support\ActorId;
 use Illuminate\Database\Eloquent\Collection;
 
 class TicketMessageService
@@ -24,11 +25,11 @@ class TicketMessageService
     ) {}
 
     /**
-     * @param  mixed  $author
+     * @param  mixed  $by
      */
     public function post(
         Ticket $ticket,
-        $author,
+        $by,
         string $body,
         MessageAuthorRole $role,
     ): TicketMessage {
@@ -46,13 +47,13 @@ class TicketMessageService
             throw TicketMessageRejected::tooLong($maxLength);
         }
 
-        if (! $this->authorization->canPostMessage($author, $ticket, $role)) {
+        if (! $this->authorization->canPostMessage($by, $ticket, $role)) {
             throw new TicketAuthorizationException('User is not authorized to post message on this ticket.');
         }
 
         $message = new TicketMessage([
             'ticket_id' => $ticket->id,
-            'author_id' => $author->{config('laratickets.user.id_column', 'id')},
+            'author_id' => ActorId::of($by),
             'author_role' => $role,
             'visibility' => MessageVisibility::PUBLIC,
             'body' => $trimmedBody,
@@ -83,11 +84,11 @@ class TicketMessageService
     }
 
     /**
-     * @param  mixed  $redactor
+     * @param  mixed  $by
      */
-    public function redact(TicketMessage $message, $redactor, string $reason): TicketMessage
+    public function redact(TicketMessage $message, $by, string $reason): TicketMessage
     {
-        if (! $this->authorization->canRedactMessage($redactor, $message)) {
+        if (! $this->authorization->canRedactMessage($by, $message)) {
             throw new TicketAuthorizationException('User is not authorized to redact this message.');
         }
 
@@ -97,7 +98,7 @@ class TicketMessageService
 
         $message->body = self::REDACTED_PLACEHOLDER;
         $message->redacted_at = now();
-        $message->redacted_by = $redactor->{config('laratickets.user.id_column', 'id')};
+        $message->redacted_by = ActorId::of($by);
         $message->redaction_reason = $reason;
         $message->save();
 

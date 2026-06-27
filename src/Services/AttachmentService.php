@@ -12,6 +12,7 @@ use AichaDigital\Laratickets\Exceptions\TicketException;
 use AichaDigital\Laratickets\Exceptions\TicketStateException;
 use AichaDigital\Laratickets\Models\Ticket;
 use AichaDigital\Laratickets\Models\TicketAttachment;
+use AichaDigital\Laratickets\Support\ActorId;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Storage;
@@ -34,13 +35,13 @@ class AttachmentService
     /**
      * Sube un archivo y persiste la fila TicketAttachment.
      *
-     * @param  mixed  $uploader  User model instance
+     * @param  mixed  $by  User model instance
      *
      * @throws TicketException
      */
     public function attach(
         Ticket $ticket,
-        $uploader,
+        $by,
         UploadedFile $file,
         AttachmentUploaderRole $role,
     ): TicketAttachment {
@@ -48,7 +49,7 @@ class AttachmentService
             throw new TicketStateException('Attachments are disabled.');
         }
 
-        if (! $this->authorization->canAttachFile($uploader, $ticket)) {
+        if (! $this->authorization->canAttachFile($by, $ticket)) {
             throw new TicketAuthorizationException('User is not authorized to attach files to this ticket.');
         }
 
@@ -69,7 +70,7 @@ class AttachmentService
             $storedName,
         );
 
-        $uploaderId = $uploader->{config('laratickets.user.id_column', 'id')};
+        $uploaderId = ActorId::of($by);
 
         $attachment = new TicketAttachment([
             'ticket_id' => $ticket->id,
@@ -92,13 +93,13 @@ class AttachmentService
     /**
      * Borra el attachment (BD + archivo físico).
      *
-     * @param  mixed  $actor  User model instance
+     * @param  mixed  $by  User model instance
      *
      * @throws TicketException
      */
-    public function delete(TicketAttachment $attachment, $actor): void
+    public function delete(TicketAttachment $attachment, $by): void
     {
-        if (! $this->authorization->canDeleteAttachment($actor, $attachment)) {
+        if (! $this->authorization->canDeleteAttachment($by, $attachment)) {
             throw new TicketAuthorizationException('User is not authorized to delete this attachment.');
         }
 

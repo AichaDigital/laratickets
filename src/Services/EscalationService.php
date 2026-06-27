@@ -9,9 +9,13 @@ use AichaDigital\Laratickets\Enums\TicketStatus;
 use AichaDigital\Laratickets\Events\EscalationApproved;
 use AichaDigital\Laratickets\Events\EscalationRejected;
 use AichaDigital\Laratickets\Events\EscalationRequested;
+use AichaDigital\Laratickets\Exceptions\TicketAuthorizationException;
+use AichaDigital\Laratickets\Exceptions\TicketStateException;
 use AichaDigital\Laratickets\Models\EscalationRequest;
 use AichaDigital\Laratickets\Models\Ticket;
 use AichaDigital\Laratickets\Models\TicketLevel;
+use AichaDigital\Laratickets\Support\ActorId;
+use AichaDigital\Laratickets\Support\SystemActor;
 use Illuminate\Support\Facades\DB;
 
 class EscalationService
@@ -23,33 +27,33 @@ class EscalationService
     /**
      * Request escalation of a ticket
      *
-     * @param  mixed  $requester  User model instance (type is configurable via config('laratickets.user.model'))
+     * @param  mixed  $by  User model instance (type is configurable via config('laratickets.user.model'))
      */
     public function requestEscalation(
         Ticket $ticket,
         TicketLevel $targetLevel,
         string $justification,
-        $requester,
+        $by,
         bool $isAutomatic = false
     ): EscalationRequest {
-        if (! $isAutomatic && ! $this->authorization->canRequestEscalation($requester, $ticket)) {
-            throw new \RuntimeException('User is not authorized to request escalation');
+        if (! $isAutomatic && ! $this->authorization->canRequestEscalation($by, $ticket)) {
+            throw new TicketAuthorizationException('User is not authorized to request escalation');
         }
 
         if (! $ticket->canEscalate()) {
-            throw new \RuntimeException('Ticket cannot be escalated');
+            throw new TicketStateException('Ticket cannot be escalated');
         }
 
         if ($targetLevel->level <= $ticket->currentLevel->level) {
-            throw new \RuntimeException('Target level must be higher than current level');
+            throw new TicketStateException('Target level must be higher than current level');
         }
 
-        return DB::transaction(function () use ($ticket, $targetLevel, $justification, $requester, $isAutomatic) {
+        return DB::transaction(function () use ($ticket, $targetLevel, $justification, $by, $isAutomatic) {
             $escalationRequest = EscalationRequest::create([
                 'ticket_id' => $ticket->id,
                 'from_level_id' => $ticket->current_level_id,
                 'to_level_id' => $targetLevel->id,
-                'requester_id' => $requester->{config('laratickets.user.id_column', 'id')},
+                'requester_id' => ActorId::of($by),
                 'justification' => $justification,
                 'status' => 'pending',
                 'is_automatic' => $isAutomatic,
@@ -69,20 +73,20 @@ class EscalationService
     /**
      * Approve an escalation request
      *
-     * @param  mixed  $approver  User model instance (type is configurable via config('laratickets.user.model'))
+     * @param  mixed  $by  User model instance (type is configurable via config('laratickets.user.model'))
      */
-    public function approveEscalation(EscalationRequest $request, $approver): EscalationRequest
+    public function approveEscalation(EscalationRequest $request, $by): EscalationRequest
     {
-        if (! $this->authorization->canApproveEscalation($approver, $request)) {
-            throw new \RuntimeException('User is not authorized to approve this escalation');
+        if (! $this->authorization->canApproveEscalation($by, $request)) {
+            throw new TicketAuthorizationException('User is not authorized to approve this escalation');
         }
 
         if (! $request->isPending()) {
-            throw new \RuntimeException('Escalation request is not pending');
+            throw new TicketStateException('Escalation request is not pending');
         }
 
-        return DB::transaction(function () use ($request, $approver) {
-            $request->approve($approver->{config('laratickets.user.id_column', 'id')});
+        return DB::transaction(function () use ($request, $by) {
+            $request->approve(ActorId::of($by));
 
             $ticket = $request->ticket;
             $newDeadline = now()->addHours($request->toLevel->default_sla_hours);
@@ -103,20 +107,20 @@ class EscalationService
     /**
      * Reject an escalation request
      *
-     * @param  mixed  $approver  User model instance (type is configurable via config('laratickets.user.model'))
+     * @param  mixed  $by  User model instance (type is configurable via config('laratickets.user.model'))
      */
-    public function rejectEscalation(EscalationRequest $request, $approver, string $reason): EscalationRequest
+    public function rejectEscalation(EscalationRequest $request, $by, string $reason): EscalationRequest
     {
-        if (! $this->authorization->canApproveEscalation($approver, $request)) {
-            throw new \RuntimeException('User is not authorized to reject this escalation');
+        if (! $this->authorization->canApproveEscalation($by, $request)) {
+            throw new TicketAuthorizationException('User is not authorized to reject this escalation');
         }
 
         if (! $request->isPending()) {
-            throw new \RuntimeException('Escalation request is not pending');
+            throw new TicketStateException('Escalation request is not pending');
         }
 
-        return DB::transaction(function () use ($request, $approver, $reason) {
-            $request->reject($approver->{config('laratickets.user.id_column', 'id')}, $reason);
+        return DB::transaction(function () use ($request, $by, $reason) {
+            $request->reject(ActorId::of($by), $reason);
 
             $ticket = $request->ticket;
             $ticket->update([
@@ -146,14 +150,12 @@ class EscalationService
             return null;
         }
 
-        // Create system user for automatic escalation
-        $systemUser = (object) [config('laratickets.user.id_column', 'id') => null];
-
+        // System actor for automatic escalation — no human requester.
         return $this->requestEscalation(
             $ticket,
             $nextLevel,
             'Automatic escalation due to SLA breach',
-            $systemUser,
+            new SystemActor,
             true
         );
     }
@@ -161,7 +163,7 @@ class EscalationService
     public function autoApproveSystemEscalation(EscalationRequest $request): EscalationRequest
     {
         if (! $request->is_automatic || ! $request->isPending()) {
-            throw new \RuntimeException('Only pending automatic escalations can be auto-approved');
+            throw new TicketStateException('Only pending automatic escalations can be auto-approved');
         }
 
         return DB::transaction(function () use ($request) {

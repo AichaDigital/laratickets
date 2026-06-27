@@ -7,10 +7,13 @@ namespace AichaDigital\Laratickets\Services;
 use AichaDigital\Laratickets\Contracts\TicketAuthorizationContract;
 use AichaDigital\Laratickets\Events\AgentRated;
 use AichaDigital\Laratickets\Events\TicketEvaluated;
+use AichaDigital\Laratickets\Exceptions\TicketAuthorizationException;
+use AichaDigital\Laratickets\Exceptions\TicketStateException;
 use AichaDigital\Laratickets\Models\AgentRating;
 use AichaDigital\Laratickets\Models\Ticket;
 use AichaDigital\Laratickets\Models\TicketAssignment;
 use AichaDigital\Laratickets\Models\TicketEvaluation;
+use AichaDigital\Laratickets\Support\ActorId;
 use Illuminate\Support\Facades\DB;
 
 class EvaluationService
@@ -22,28 +25,28 @@ class EvaluationService
     /**
      * Evaluate a ticket
      *
-     * @param  mixed  $evaluator  User model instance (type is configurable via config('laratickets.user.model'))
+     * @param  mixed  $by  User model instance (type is configurable via config('laratickets.user.model'))
      */
     public function evaluateTicket(
         Ticket $ticket,
-        $evaluator,
+        $by,
         float $score,
         ?string $comment = null
     ): TicketEvaluation {
         if (! config('laratickets.evaluation.enabled', true)) {
-            throw new \RuntimeException('Evaluation system is disabled');
+            throw new TicketStateException('Evaluation system is disabled');
         }
 
-        if (! $this->authorization->canEvaluateTicket($evaluator, $ticket)) {
-            throw new \RuntimeException('User is not authorized to evaluate this ticket');
+        if (! $this->authorization->canEvaluateTicket($by, $ticket)) {
+            throw new TicketAuthorizationException('User is not authorized to evaluate this ticket');
         }
 
         $this->validateScore($score);
 
-        return DB::transaction(function () use ($ticket, $evaluator, $score, $comment) {
+        return DB::transaction(function () use ($ticket, $by, $score, $comment) {
             // Check if user already evaluated
             $existing = TicketEvaluation::where('ticket_id', $ticket->id)
-                ->where('evaluator_id', $evaluator->{config('laratickets.user.id_column', 'id')})
+                ->where('evaluator_id', ActorId::of($by))
                 ->first();
 
             if ($existing) {
@@ -52,7 +55,7 @@ class EvaluationService
             } else {
                 $evaluation = TicketEvaluation::create([
                     'ticket_id' => $ticket->id,
-                    'evaluator_id' => $evaluator->{config('laratickets.user.id_column', 'id')},
+                    'evaluator_id' => ActorId::of($by),
                     'score' => $score,
                     'comment' => $comment,
                 ]);
@@ -71,42 +74,42 @@ class EvaluationService
      * Rate an agent
      *
      * @param  mixed  $agent  Agent user model instance (type is configurable via config('laratickets.user.model'))
-     * @param  mixed  $rater  Rater user model instance (type is configurable via config('laratickets.user.model'))
+     * @param  mixed  $by  Rater user model instance (type is configurable via config('laratickets.user.model'))
      */
     public function rateAgent(
         Ticket $ticket,
         $agent,
-        $rater,
+        $by,
         float $score,
         ?string $comment = null
     ): AgentRating {
         if (! config('laratickets.evaluation.agent_rating_enabled', true)) {
-            throw new \RuntimeException('Agent rating system is disabled');
+            throw new TicketStateException('Agent rating system is disabled');
         }
 
-        if (! $this->authorization->canRateAgent($rater, $ticket, $agent)) {
-            throw new \RuntimeException('User is not authorized to rate this agent');
+        if (! $this->authorization->canRateAgent($by, $ticket, $agent)) {
+            throw new TicketAuthorizationException('User is not authorized to rate this agent');
         }
 
         $this->validateScore($score);
 
         // Verify agent participated in ticket
         $participated = $ticket->assignments()
-            ->where('user_id', $agent->{config('laratickets.user.id_column', 'id')})
+            ->where('user_id', ActorId::of($agent))
             ->exists();
 
         if (! $participated) {
-            throw new \RuntimeException('Agent did not participate in this ticket');
+            throw new TicketStateException('Agent did not participate in this ticket');
         }
 
-        return DB::transaction(function () use ($ticket, $agent, $rater, $score, $comment) {
-            $agentId = $agent->{config('laratickets.user.id_column', 'id')};
-            $raterId = $rater->{config('laratickets.user.id_column', 'id')};
+        return DB::transaction(function () use ($ticket, $agent, $by, $score, $comment) {
+            $agentId = ActorId::of($agent);
+            $byId = ActorId::of($by);
 
             // Check if rater already rated this agent on this ticket
             $existing = AgentRating::where('ticket_id', $ticket->id)
                 ->where('agent_id', $agentId)
-                ->where('rater_id', $raterId)
+                ->where('rater_id', $byId)
                 ->first();
 
             if ($existing) {
@@ -116,7 +119,7 @@ class EvaluationService
                 $rating = AgentRating::create([
                     'ticket_id' => $ticket->id,
                     'agent_id' => $agentId,
-                    'rater_id' => $raterId,
+                    'rater_id' => $byId,
                     'score' => $score,
                     'comment' => $comment,
                 ]);
@@ -148,7 +151,7 @@ class EvaluationService
      */
     public function calculateAgentAverageRating($agent): float
     {
-        $agentId = $agent->{config('laratickets.user.id_column', 'id')};
+        $agentId = ActorId::of($agent);
 
         return AgentRating::where('agent_id', $agentId)
             ->avg('score') ?? 0.0;
@@ -179,7 +182,7 @@ class EvaluationService
      */
     public function getAgentStatistics($agent): array
     {
-        $agentId = $agent->{config('laratickets.user.id_column', 'id')};
+        $agentId = ActorId::of($agent);
 
         return [
             'total_ratings' => AgentRating::forAgent($agentId)->count(),
