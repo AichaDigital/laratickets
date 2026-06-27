@@ -8,10 +8,12 @@ use AichaDigital\Laratickets\Contracts\TicketAuthorizationContract;
 use AichaDigital\Laratickets\Enums\MessageAuthorRole;
 use AichaDigital\Laratickets\Enums\MessageVisibility;
 use AichaDigital\Laratickets\Events\TicketMessagePosted;
+use AichaDigital\Laratickets\Exceptions\TicketAuthorizationException;
+use AichaDigital\Laratickets\Exceptions\TicketMessageRejected;
+use AichaDigital\Laratickets\Exceptions\TicketStateException;
 use AichaDigital\Laratickets\Models\Ticket;
 use AichaDigital\Laratickets\Models\TicketMessage;
 use Illuminate\Database\Eloquent\Collection;
-use RuntimeException;
 
 class TicketMessageService
 {
@@ -31,21 +33,21 @@ class TicketMessageService
         MessageAuthorRole $role,
     ): TicketMessage {
         if (! config('laratickets.messages.enabled', true)) {
-            throw new RuntimeException('Ticket messages are disabled.');
+            throw new TicketStateException('Ticket messages are disabled.');
         }
 
         $trimmedBody = trim($body);
         if ($trimmedBody === '') {
-            throw new RuntimeException('Message body cannot be empty.');
+            throw TicketMessageRejected::empty();
         }
 
         $maxLength = (int) config('laratickets.messages.max_body_length', 5000);
         if ($maxLength > 0 && mb_strlen($trimmedBody) > $maxLength) {
-            throw new RuntimeException("Message body exceeds max length ($maxLength chars). ");
+            throw TicketMessageRejected::tooLong($maxLength);
         }
 
         if (! $this->authorization->canPostMessage($author, $ticket, $role)) {
-            throw new RuntimeException('User is not authorized to post message on this ticket.');
+            throw new TicketAuthorizationException('User is not authorized to post message on this ticket.');
         }
 
         $message = new TicketMessage([
@@ -86,7 +88,7 @@ class TicketMessageService
     public function redact(TicketMessage $message, $redactor, string $reason): TicketMessage
     {
         if (! $this->authorization->canRedactMessage($redactor, $message)) {
-            throw new RuntimeException('User is not authorized to redact this message.');
+            throw new TicketAuthorizationException('User is not authorized to redact this message.');
         }
 
         if ($message->isRedacted()) {

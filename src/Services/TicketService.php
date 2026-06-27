@@ -9,6 +9,7 @@ use AichaDigital\Laratickets\Enums\TicketStatus;
 use AichaDigital\Laratickets\Events\TicketClosed;
 use AichaDigital\Laratickets\Events\TicketCreated;
 use AichaDigital\Laratickets\Events\TicketStatusChanged;
+use AichaDigital\Laratickets\Exceptions\TicketAuthorizationException;
 use AichaDigital\Laratickets\Models\Ticket;
 use AichaDigital\Laratickets\Models\TicketLevel;
 use Illuminate\Support\Facades\DB;
@@ -28,7 +29,7 @@ class TicketService
     public function createTicket(array $data, $creator): Ticket
     {
         if (! $this->authorization->canCreateTicket($creator)) {
-            throw new \RuntimeException('User is not authorized to create tickets');
+            throw new TicketAuthorizationException('User is not authorized to create tickets');
         }
 
         return DB::transaction(function () use ($data, $creator) {
@@ -59,7 +60,7 @@ class TicketService
     public function updateTicketStatus(Ticket $ticket, TicketStatus $newStatus, $user): Ticket
     {
         if (! $this->authorization->canUpdateTicket($user, $ticket)) {
-            throw new \RuntimeException('User is not authorized to update this ticket');
+            throw new TicketAuthorizationException('User is not authorized to update this ticket');
         }
 
         $oldStatus = $ticket->status;
@@ -83,7 +84,7 @@ class TicketService
     public function closeTicket(Ticket $ticket, $resolver): Ticket
     {
         if (! $this->authorization->canCloseTicket($resolver, $ticket)) {
-            throw new \RuntimeException('User is not authorized to close this ticket');
+            throw new TicketAuthorizationException('User is not authorized to close this ticket');
         }
 
         return DB::transaction(function () use ($ticket, $resolver) {
@@ -110,7 +111,7 @@ class TicketService
     public function resolveTicket(Ticket $ticket, $resolver): Ticket
     {
         if (! $this->authorization->canUpdateTicket($resolver, $ticket)) {
-            throw new \RuntimeException('User is not authorized to resolve this ticket');
+            throw new TicketAuthorizationException('User is not authorized to resolve this ticket');
         }
 
         $ticket->update([
@@ -132,7 +133,7 @@ class TicketService
     public function cancelTicket(Ticket $ticket, $user, ?string $reason = null): Ticket
     {
         if (! $this->authorization->canUpdateTicket($user, $ticket)) {
-            throw new \RuntimeException('User is not authorized to cancel this ticket');
+            throw new TicketAuthorizationException('User is not authorized to cancel this ticket');
         }
 
         return DB::transaction(function () use ($ticket) {

@@ -8,6 +8,8 @@ use AichaDigital\Laratickets\Contracts\TicketAuthorizationContract;
 use AichaDigital\Laratickets\Contracts\UserCapabilityContract;
 use AichaDigital\Laratickets\Enums\TicketStatus;
 use AichaDigital\Laratickets\Events\TicketAssigned;
+use AichaDigital\Laratickets\Exceptions\TicketAuthorizationException;
+use AichaDigital\Laratickets\Exceptions\TicketStateException;
 use AichaDigital\Laratickets\Models\Ticket;
 use AichaDigital\Laratickets\Models\TicketAssignment;
 use AichaDigital\Laratickets\Models\TicketLevel;
@@ -30,13 +32,13 @@ class AssignmentService
     public function assignAgent(Ticket $ticket, $agent, $assigner = null): TicketAssignment
     {
         if ($assigner && ! $this->authorization->canUpdateTicket($assigner, $ticket)) {
-            throw new \RuntimeException('User is not authorized to assign agents');
+            throw new TicketAuthorizationException('User is not authorized to assign agents');
         }
 
         // Verify agent has access to ticket level
         $agentLevel = $this->userCapability->getUserLevel($agent);
         if (! $agentLevel || $agentLevel->level < $ticket->currentLevel->level) {
-            throw new \RuntimeException('Agent does not have access to this ticket level');
+            throw new TicketStateException('Agent does not have access to this ticket level');
         }
 
         // Check max concurrent tickets if configured
@@ -44,7 +46,7 @@ class AssignmentService
         if ($maxConcurrent) {
             $activeTickets = $this->userCapability->getUserAssignedTickets($agent)->count();
             if ($activeTickets >= $maxConcurrent) {
-                throw new \RuntimeException('Agent has reached maximum concurrent tickets');
+                throw new TicketStateException('Agent has reached maximum concurrent tickets');
             }
         }
 
@@ -92,7 +94,7 @@ class AssignmentService
             ->first();
 
         if (! $assignment) {
-            throw new \RuntimeException('Agent is not assigned to this ticket');
+            throw new TicketStateException('Agent is not assigned to this ticket');
         }
 
         $assignment->complete();
@@ -165,7 +167,7 @@ class AssignmentService
     public function reassignTicket(Ticket $ticket, $oldAgent, $newAgent, $assigner): TicketAssignment
     {
         if (! $this->authorization->canUpdateTicket($assigner, $ticket)) {
-            throw new \RuntimeException('User is not authorized to reassign tickets');
+            throw new TicketAuthorizationException('User is not authorized to reassign tickets');
         }
 
         return DB::transaction(function () use ($ticket, $oldAgent, $newAgent) {

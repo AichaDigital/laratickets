@@ -6,6 +6,8 @@ use AichaDigital\Laratickets\Contracts\TicketAuthorizationContract;
 use AichaDigital\Laratickets\Contracts\UserCapabilityContract;
 use AichaDigital\Laratickets\Enums\Priority;
 use AichaDigital\Laratickets\Enums\TicketStatus;
+use AichaDigital\Laratickets\Exceptions\TicketAuthorizationException;
+use AichaDigital\Laratickets\Exceptions\TicketStateException;
 use AichaDigital\Laratickets\Models\Department;
 use AichaDigital\Laratickets\Models\Ticket;
 use AichaDigital\Laratickets\Models\TicketAssignment;
@@ -189,7 +191,7 @@ describe('AssignmentService authorization and validation', function () {
 
         // Agent only has Level 1 access
         expect(fn () => $this->service->assignAgent($ticket, $this->agent))
-            ->toThrow(RuntimeException::class, 'Agent does not have access to this ticket level');
+            ->toThrow(TicketStateException::class, 'Agent does not have access to this ticket level');
     });
 
     it('throws exception when agent has max concurrent tickets', function () {
@@ -213,7 +215,7 @@ describe('AssignmentService authorization and validation', function () {
         ]);
 
         expect(fn () => $service->assignAgent($ticket, $this->agent))
-            ->toThrow(RuntimeException::class, 'Agent has reached maximum concurrent tickets');
+            ->toThrow(TicketStateException::class, 'Agent has reached maximum concurrent tickets');
     });
 
     it('throws exception when assigner is not authorized', function () {
@@ -232,7 +234,7 @@ describe('AssignmentService authorization and validation', function () {
         ]);
 
         expect(fn () => $service->assignAgent($ticket, $this->agent, $this->assigner))
-            ->toThrow(RuntimeException::class, 'User is not authorized to assign agents');
+            ->toThrow(TicketAuthorizationException::class, 'User is not authorized to assign agents');
     });
 });
 
@@ -248,7 +250,7 @@ describe('AssignmentService unassignment', function () {
         ]);
 
         expect(fn () => $this->service->unassignAgent($ticket, $this->agent))
-            ->toThrow(RuntimeException::class, 'Agent is not assigned to this ticket');
+            ->toThrow(TicketStateException::class, 'Agent is not assigned to this ticket');
     });
 
     it('completes assignment when unassigning agent', function () {

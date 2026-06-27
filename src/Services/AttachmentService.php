@@ -7,13 +7,15 @@ namespace AichaDigital\Laratickets\Services;
 use AichaDigital\Laratickets\Contracts\TicketAuthorizationContract;
 use AichaDigital\Laratickets\Enums\AttachmentUploaderRole;
 use AichaDigital\Laratickets\Events\AttachmentUploaded;
+use AichaDigital\Laratickets\Exceptions\TicketAuthorizationException;
+use AichaDigital\Laratickets\Exceptions\TicketException;
+use AichaDigital\Laratickets\Exceptions\TicketStateException;
 use AichaDigital\Laratickets\Models\Ticket;
 use AichaDigital\Laratickets\Models\TicketAttachment;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
-use RuntimeException;
 
 /**
  * Attachment service — sube, lista, borra archivos asociados a un ticket
@@ -34,7 +36,7 @@ class AttachmentService
      *
      * @param  mixed  $uploader  User model instance
      *
-     * @throws RuntimeException
+     * @throws TicketException
      */
     public function attach(
         Ticket $ticket,
@@ -43,11 +45,11 @@ class AttachmentService
         AttachmentUploaderRole $role,
     ): TicketAttachment {
         if (! config('laratickets.attachments.enabled', true)) {
-            throw new RuntimeException('Attachments are disabled.');
+            throw new TicketStateException('Attachments are disabled.');
         }
 
         if (! $this->authorization->canAttachFile($uploader, $ticket)) {
-            throw new RuntimeException('User is not authorized to attach files to this ticket.');
+            throw new TicketAuthorizationException('User is not authorized to attach files to this ticket.');
         }
 
         $this->validateFile($file);
@@ -92,12 +94,12 @@ class AttachmentService
      *
      * @param  mixed  $actor  User model instance
      *
-     * @throws RuntimeException
+     * @throws TicketException
      */
     public function delete(TicketAttachment $attachment, $actor): void
     {
         if (! $this->authorization->canDeleteAttachment($actor, $attachment)) {
-            throw new RuntimeException('User is not authorized to delete this attachment.');
+            throw new TicketAuthorizationException('User is not authorized to delete this attachment.');
         }
 
         Storage::disk($attachment->disk)->delete($attachment->path);
@@ -132,7 +134,7 @@ class AttachmentService
         $sizeKb = (int) ceil(($file->getSize() ?: 0) / 1024);
 
         if ($sizeKb > $maxKb) {
-            throw new RuntimeException("File exceeds max size ($maxKb KB).");
+            throw new TicketStateException("File exceeds max size ($maxKb KB).");
         }
 
         /** @var array<int, string> $allowedMimes */
@@ -147,7 +149,7 @@ class AttachmentService
         $extOk = $allowedExts === [] || in_array($ext, $allowedExts, true);
 
         if (! $mimeOk || ! $extOk) {
-            throw new RuntimeException("File type not allowed (mime: $mime, ext: $ext).");
+            throw new TicketStateException("File type not allowed (mime: $mime, ext: $ext).");
         }
     }
 
@@ -159,7 +161,7 @@ class AttachmentService
         $projectedKb = (int) ceil(($currentBytes + $newBytes) / 1024);
 
         if ($projectedKb > $maxTotalKb) {
-            throw new RuntimeException("Total attachments size for this ticket would exceed limit ($maxTotalKb KB).");
+            throw new TicketStateException("Total attachments size for this ticket would exceed limit ($maxTotalKb KB).");
         }
     }
 
