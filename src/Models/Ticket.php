@@ -76,10 +76,9 @@ class Ticket extends Model
                 }
             }
 
-            // Auto-assign creator if authenticated and not set
-            if (empty($ticket->created_by) && auth()->check()) {
-                $ticket->created_by = auth()->id();
-            }
+            // NOTE: the creator is never read from auth() here. The domain is
+            // HTTP-agnostic — callers pass the actor explicitly (TicketService
+            // sets created_by from the `by:` actor). See ADR-004.
         });
     }
 

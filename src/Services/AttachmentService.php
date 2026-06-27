@@ -7,13 +7,16 @@ namespace AichaDigital\Laratickets\Services;
 use AichaDigital\Laratickets\Contracts\TicketAuthorizationContract;
 use AichaDigital\Laratickets\Enums\AttachmentUploaderRole;
 use AichaDigital\Laratickets\Events\AttachmentUploaded;
+use AichaDigital\Laratickets\Exceptions\TicketAuthorizationException;
+use AichaDigital\Laratickets\Exceptions\TicketException;
+use AichaDigital\Laratickets\Exceptions\TicketStateException;
 use AichaDigital\Laratickets\Models\Ticket;
 use AichaDigital\Laratickets\Models\TicketAttachment;
+use AichaDigital\Laratickets\Support\ActorId;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
-use RuntimeException;
 
 /**
  * Attachment service — sube, lista, borra archivos asociados a un ticket
@@ -32,22 +35,22 @@ class AttachmentService
     /**
      * Sube un archivo y persiste la fila TicketAttachment.
      *
-     * @param  mixed  $uploader  User model instance
+     * @param  mixed  $by  User model instance
      *
-     * @throws RuntimeException
+     * @throws TicketException
      */
     public function attach(
         Ticket $ticket,
-        $uploader,
+        $by,
         UploadedFile $file,
         AttachmentUploaderRole $role,
     ): TicketAttachment {
         if (! config('laratickets.attachments.enabled', true)) {
-            throw new RuntimeException('Attachments are disabled.');
+            throw new TicketStateException('Attachments are disabled.');
         }
 
-        if (! $this->authorization->canAttachFile($uploader, $ticket)) {
-            throw new RuntimeException('User is not authorized to attach files to this ticket.');
+        if (! $this->authorization->canAttachFile($by, $ticket)) {
+            throw new TicketAuthorizationException('User is not authorized to attach files to this ticket.');
         }
 
         $this->validateFile($file);
@@ -67,7 +70,7 @@ class AttachmentService
             $storedName,
         );
 
-        $uploaderId = $uploader->{config('laratickets.user.id_column', 'id')};
+        $uploaderId = ActorId::of($by);
 
         $attachment = new TicketAttachment([
             'ticket_id' => $ticket->id,
@@ -90,14 +93,14 @@ class AttachmentService
     /**
      * Borra el attachment (BD + archivo físico).
      *
-     * @param  mixed  $actor  User model instance
+     * @param  mixed  $by  User model instance
      *
-     * @throws RuntimeException
+     * @throws TicketException
      */
-    public function delete(TicketAttachment $attachment, $actor): void
+    public function delete(TicketAttachment $attachment, $by): void
     {
-        if (! $this->authorization->canDeleteAttachment($actor, $attachment)) {
-            throw new RuntimeException('User is not authorized to delete this attachment.');
+        if (! $this->authorization->canDeleteAttachment($by, $attachment)) {
+            throw new TicketAuthorizationException('User is not authorized to delete this attachment.');
         }
 
         Storage::disk($attachment->disk)->delete($attachment->path);
@@ -132,7 +135,7 @@ class AttachmentService
         $sizeKb = (int) ceil(($file->getSize() ?: 0) / 1024);
 
         if ($sizeKb > $maxKb) {
-            throw new RuntimeException("File exceeds max size ($maxKb KB).");
+            throw new TicketStateException("File exceeds max size ($maxKb KB).");
         }
 
         /** @var array<int, string> $allowedMimes */
@@ -147,7 +150,7 @@ class AttachmentService
         $extOk = $allowedExts === [] || in_array($ext, $allowedExts, true);
 
         if (! $mimeOk || ! $extOk) {
-            throw new RuntimeException("File type not allowed (mime: $mime, ext: $ext).");
+            throw new TicketStateException("File type not allowed (mime: $mime, ext: $ext).");
         }
     }
 
@@ -159,7 +162,7 @@ class AttachmentService
         $projectedKb = (int) ceil(($currentBytes + $newBytes) / 1024);
 
         if ($projectedKb > $maxTotalKb) {
-            throw new RuntimeException("Total attachments size for this ticket would exceed limit ($maxTotalKb KB).");
+            throw new TicketStateException("Total attachments size for this ticket would exceed limit ($maxTotalKb KB).");
         }
     }
 

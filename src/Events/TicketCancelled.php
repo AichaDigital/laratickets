@@ -9,11 +9,9 @@ use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
 /**
- * @experimental Orphan event (ADR-004): defined but not emitted by any service
- *               yet — a placeholder for a future SLA watcher. Outside the v1.0
- *               semver promise; safe to remove later.
+ * A ticket transitioned to CANCELLED. Core, stable (ADR-004 v1.0 matrix).
  */
-class SLABreached
+class TicketCancelled
 {
     use Dispatchable, SerializesModels;
 

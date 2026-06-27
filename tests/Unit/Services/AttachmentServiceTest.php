@@ -7,6 +7,8 @@ use AichaDigital\Laratickets\Enums\AttachmentUploaderRole;
 use AichaDigital\Laratickets\Enums\Priority;
 use AichaDigital\Laratickets\Enums\TicketStatus;
 use AichaDigital\Laratickets\Events\AttachmentUploaded;
+use AichaDigital\Laratickets\Exceptions\TicketAuthorizationException;
+use AichaDigital\Laratickets\Exceptions\TicketStateException;
 use AichaDigital\Laratickets\Models\Department;
 use AichaDigital\Laratickets\Models\Ticket;
 use AichaDigital\Laratickets\Models\TicketAttachment;
@@ -91,14 +93,14 @@ describe('AttachmentService::attach', function () {
         $file = UploadedFile::fake()->create('x.pdf', 10, 'application/pdf');
 
         expect(fn () => $svc->attach($this->ticket, $this->uploader, $file, AttachmentUploaderRole::CLIENT))
-            ->toThrow(RuntimeException::class, 'not authorized');
+            ->toThrow(TicketAuthorizationException::class, 'not authorized');
     });
 
     it('rejects file with disallowed mime type', function () {
         $file = UploadedFile::fake()->create('virus.exe', 10, 'application/x-msdownload');
 
         expect(fn () => $this->service->attach($this->ticket, $this->uploader, $file, AttachmentUploaderRole::CLIENT))
-            ->toThrow(RuntimeException::class, 'not allowed');
+            ->toThrow(TicketStateException::class, 'not allowed');
     });
 
     it('rejects file exceeding per-file size limit', function () {
@@ -106,7 +108,7 @@ describe('AttachmentService::attach', function () {
         $file = UploadedFile::fake()->create('big.pdf', 6000, 'application/pdf');
 
         expect(fn () => $this->service->attach($this->ticket, $this->uploader, $file, AttachmentUploaderRole::CLIENT))
-            ->toThrow(RuntimeException::class, 'exceeds max size');
+            ->toThrow(TicketStateException::class, 'exceeds max size');
     });
 
     it('rejects when total ticket size would exceed cap', function () {
@@ -118,7 +120,7 @@ describe('AttachmentService::attach', function () {
         $second = UploadedFile::fake()->create('b.pdf', 100, 'application/pdf');
 
         expect(fn () => $this->service->attach($this->ticket, $this->uploader, $second, AttachmentUploaderRole::CLIENT))
-            ->toThrow(RuntimeException::class, 'exceed limit');
+            ->toThrow(TicketStateException::class, 'exceed limit');
     });
 
     it('respects attachments.enabled = false', function () {
@@ -127,7 +129,7 @@ describe('AttachmentService::attach', function () {
         $file = UploadedFile::fake()->create('x.pdf', 10, 'application/pdf');
 
         expect(fn () => $this->service->attach($this->ticket, $this->uploader, $file, AttachmentUploaderRole::CLIENT))
-            ->toThrow(RuntimeException::class, 'disabled');
+            ->toThrow(TicketStateException::class, 'disabled');
     });
 });
 
@@ -153,7 +155,7 @@ describe('AttachmentService::delete', function () {
         $svc = new AttachmentService($this->authorization);
 
         expect(fn () => $svc->delete($att, $this->uploader))
-            ->toThrow(RuntimeException::class, 'not authorized');
+            ->toThrow(TicketAuthorizationException::class, 'not authorized');
     });
 });
 

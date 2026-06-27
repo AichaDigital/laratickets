@@ -1,12 +1,13 @@
 # Laratickets - Advanced Support Ticket System for Laravel
 
-> **⚠️ ALPHA VERSION - IN ACTIVE DEVELOPMENT**
+> **v1.0 — stable contract.** The public contract is frozen as of v1.0.0
+> (see [`docs/ADR-004-v1.0-contract.md`](docs/ADR-004-v1.0-contract.md)).
 >
-> This package is currently in alpha stage and under active development. The API and features may change significantly before the first stable release. **Not recommended for production use yet.**
->
-> - Current Status: Pre-release (v0.x)
-> - Expected Stable Release: TBD
-> - Contributions and feedback welcome!
+> - **Core (stable):** open · assign · reassign · converse · close · departments
+>   + routing · priority · attachments · statuses.
+> - **Optional-stable (ON by default):** level escalation.
+> - **Optional-experimental (`@experimental`, OFF by default):** evaluations,
+>   agent rating, risk assessment — outside the semver promise.
 
 [![Latest Version on Packagist](https://img.shields.io/packagist/v/aichadigital/laratickets.svg?style=flat-square)](https://packagist.org/packages/aichadigital/laratickets)
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL%20v3-blue.svg?style=flat-square)](https://www.gnu.org/licenses/agpl-3.0)

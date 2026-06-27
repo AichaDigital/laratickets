@@ -8,9 +8,12 @@ use AichaDigital\Laratickets\Contracts\TicketAuthorizationContract;
 use AichaDigital\Laratickets\Contracts\UserCapabilityContract;
 use AichaDigital\Laratickets\Enums\TicketStatus;
 use AichaDigital\Laratickets\Events\TicketAssigned;
+use AichaDigital\Laratickets\Exceptions\TicketAuthorizationException;
+use AichaDigital\Laratickets\Exceptions\TicketStateException;
 use AichaDigital\Laratickets\Models\Ticket;
 use AichaDigital\Laratickets\Models\TicketAssignment;
 use AichaDigital\Laratickets\Models\TicketLevel;
+use AichaDigital\Laratickets\Support\ActorId;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
@@ -25,18 +28,18 @@ class AssignmentService
      * Assign an agent to a ticket
      *
      * @param  mixed  $agent  Agent user model instance (type is configurable via config('laratickets.user.model'))
-     * @param  mixed|null  $assigner  User model instance (type is configurable via config('laratickets.user.model'))
+     * @param  mixed|null  $by  User model instance (type is configurable via config('laratickets.user.model'))
      */
-    public function assignAgent(Ticket $ticket, $agent, $assigner = null): TicketAssignment
+    public function assignAgent(Ticket $ticket, $agent, $by = null): TicketAssignment
     {
-        if ($assigner && ! $this->authorization->canUpdateTicket($assigner, $ticket)) {
-            throw new \RuntimeException('User is not authorized to assign agents');
+        if ($by && ! $this->authorization->canUpdateTicket($by, $ticket)) {
+            throw new TicketAuthorizationException('User is not authorized to assign agents');
         }
 
         // Verify agent has access to ticket level
         $agentLevel = $this->userCapability->getUserLevel($agent);
         if (! $agentLevel || $agentLevel->level < $ticket->currentLevel->level) {
-            throw new \RuntimeException('Agent does not have access to this ticket level');
+            throw new TicketStateException('Agent does not have access to this ticket level');
         }
 
         // Check max concurrent tickets if configured
@@ -44,16 +47,16 @@ class AssignmentService
         if ($maxConcurrent) {
             $activeTickets = $this->userCapability->getUserAssignedTickets($agent)->count();
             if ($activeTickets >= $maxConcurrent) {
-                throw new \RuntimeException('Agent has reached maximum concurrent tickets');
+                throw new TicketStateException('Agent has reached maximum concurrent tickets');
             }
         }
 
         /** @var TicketAssignment $result */
-        $result = DB::transaction(function () use ($ticket, $agent): TicketAssignment {
+        $result = DB::transaction(function () use ($ticket, $agent, $by): TicketAssignment {
             // Check if already assigned
             /** @var TicketAssignment|null $existing */
             $existing = $ticket->activeAssignments()
-                ->where('user_id', $agent->{config('laratickets.user.id_column', 'id')})
+                ->where('user_id', ActorId::of($agent))
                 ->first();
 
             if ($existing) {
@@ -63,7 +66,7 @@ class AssignmentService
             /** @var TicketAssignment $assignment */
             $assignment = TicketAssignment::create([
                 'ticket_id' => $ticket->id,
-                'user_id' => $agent->{config('laratickets.user.id_column', 'id')},
+                'user_id' => ActorId::of($agent),
             ]);
 
             // Update ticket status if it's new
@@ -71,7 +74,7 @@ class AssignmentService
                 $ticket->update(['status' => TicketStatus::ASSIGNED]);
             }
 
-            event(new TicketAssigned($ticket, $agent));
+            event(new TicketAssigned($ticket, $agent, $by));
 
             return $assignment;
         });
@@ -88,11 +91,11 @@ class AssignmentService
     {
         /** @var TicketAssignment|null $assignment */
         $assignment = $ticket->activeAssignments()
-            ->where('user_id', $agent->{config('laratickets.user.id_column', 'id')})
+            ->where('user_id', ActorId::of($agent))
             ->first();
 
         if (! $assignment) {
-            throw new \RuntimeException('Agent is not assigned to this ticket');
+            throw new TicketStateException('Agent is not assigned to this ticket');
         }
 
         $assignment->complete();
@@ -160,12 +163,12 @@ class AssignmentService
      *
      * @param  mixed  $oldAgent  Old agent user model instance (type is configurable via config('laratickets.user.model'))
      * @param  mixed  $newAgent  New agent user model instance (type is configurable via config('laratickets.user.model'))
-     * @param  mixed  $assigner  User model instance (type is configurable via config('laratickets.user.model'))
+     * @param  mixed  $by  User model instance (type is configurable via config('laratickets.user.model'))
      */
-    public function reassignTicket(Ticket $ticket, $oldAgent, $newAgent, $assigner): TicketAssignment
+    public function reassignTicket(Ticket $ticket, $oldAgent, $newAgent, $by): TicketAssignment
     {
-        if (! $this->authorization->canUpdateTicket($assigner, $ticket)) {
-            throw new \RuntimeException('User is not authorized to reassign tickets');
+        if (! $this->authorization->canUpdateTicket($by, $ticket)) {
+            throw new TicketAuthorizationException('User is not authorized to reassign tickets');
         }
 
         return DB::transaction(function () use ($ticket, $oldAgent, $newAgent) {

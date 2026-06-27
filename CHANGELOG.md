@@ -2,6 +2,78 @@
 
 All notable changes to `laratickets` will be documented in this file.
 
+## [1.0.0] - 2026-06-27
+
+First stability boundary — the public contract is frozen. v1.0 seals the parts
+that would be breaking to change once a second consumer (aicha) relies on them;
+purely additive ergonomics are deferred to v1.1. See
+`docs/ADR-004-v1.0-contract.md`.
+
+### Stability tiers
+
+- **Core (stable, frozen):** open · assign · reassign · converse (messages) ·
+  close · departments + routing · priority · attachments · statuses.
+- **Optional-stable (frozen, ON by default):** level escalation
+  (request/approve/reject).
+- **Optional-experimental (`@experimental`, OFF by default):** evaluations,
+  agent rating, risk assessment — outside the v1.0 semver promise; they may
+  change or be removed without a major.
+
+### Added
+
+- Typed exception hierarchy rooted at `TicketException` (extends
+  `\RuntimeException`): `TicketAuthorizationException`, `TicketStateException`,
+  `TicketMessageRejected` (with `::empty()` / `::tooLong(int)` and an
+  inspectable `maxLength()`).
+- `Support\ActorId::of()` — single read of the configured user id column.
+- `Support\SystemActor` — non-human actor (timeout auto-escalation, jobs);
+  resolves to a null id, explicitly not notifiable.
+- New core domain events: `TicketResolved`, `TicketCancelled`,
+  `TicketMessageRedacted`. `resolveTicket`/`cancelTicket`/`redact` now emit them.
+- Per-transition event contract test locking the anti-duplicate invariant.
+- Migration making `escalation_requests.requester_id` nullable.
+
+### Changed
+
+- **Services throw typed exceptions** instead of generic `\RuntimeException`.
+  Back-compatible: `catch (\RuntimeException)` still catches them.
+- **Actor parameter unified to `by:`** across all mutating service signatures
+  (positional call sites unaffected — no consumer used named args).
+- **`Ticket::booted()` no longer reads `auth()`**: the domain is HTTP-agnostic;
+  callers pass the actor explicitly.
+- **`TicketAssigned` payload typed**: `mixed $user` → `$agent` + `$assignedBy`
+  (the assigner; null for system/auto assignment).
+- **`updateTicketStatus()` is now a dispatcher (D1)**: terminal targets delegate
+  to dedicated `apply*` methods, emitting the specific terminal event (never
+  `TicketStatusChanged`) and setting `closed_at`/`resolved_by`.
+- **Experimental defaults flipped OFF** (D3): `evaluation.enabled`,
+  `evaluation.agent_rating_enabled`, `risk_assessment.enabled`. Level
+  auto-escalation stays ON. Config keys keep their names (D2).
+- `EscalationRequest::approve()/reject()` widened `int` → `mixed` (UUID-first).
+
+### Fixed
+
+- Timeout auto-escalation could never insert (`escalation_requests.requester_id`
+  was NOT NULL while the system actor has a null id). The column is now nullable.
+- Closing a ticket via the generic `updateTicketStatus()` path now sets
+  `closed_at`/`resolved_by` (previously left half-populated). `cancelTicket`
+  now sets `resolved_by` too.
+
+### Upgrade guide (v0.7.0 → v1.0.0)
+
+- Run `php artisan migrate` after `composer update` (requester_id nullable). The
+  migration is backward-compatible with existing rows; its `down()` cannot
+  restore NOT NULL if system/auto-escalation rows with a null requester exist.
+- No code changes required for consumers passing the actor positionally and
+  catching `\RuntimeException`. Recommended: catch the specific subtypes for
+  precise 403/422 handling, and add listeners for `TicketResolved` /
+  `TicketCancelled` / `TicketMessageRedacted` where useful.
+- If a consumer read `TicketAssigned::$user`, switch to `$agent`.
+- Experimental features are now OFF by default; set the corresponding
+  `LARATICKETS_*` env vars to re-enable. Level auto-escalation is unchanged (ON).
+- The only contract point pending a product fact: whether castris wants level
+  auto-escalation active (default stays ON until confirmed).
+
 ## [0.7.0] - 2026-05-25
 
 ### Added — Department head as primary routing target
