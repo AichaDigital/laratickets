@@ -4,10 +4,17 @@ namespace AichaDigital\Laratickets\Tests;
 
 use AichaDigital\Laratickets\LaraticketsServiceProvider;
 use Illuminate\Database\Eloquent\Factories\Factory;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Orchestra\Testbench\TestCase as Orchestra;
 
 class TestCase extends Orchestra
 {
+    // Package migrations are discovered from the ServiceProvider's
+    // loadMigrationsFrom() and run by RefreshDatabase, so a new migration is
+    // picked up automatically — there is no hardcoded include/->up() list to
+    // keep in sync. See the umbrella CLAUDE.md lesson (2026-06-27).
+    use RefreshDatabase;
+
     /**
      * Deterministic UUID v7 fixtures for tests that need actor IDs.
      *
@@ -44,45 +51,5 @@ class TestCase extends Orchestra
             'database' => ':memory:',
             'prefix' => '',
         ]);
-
-        // Run migrations
-        $migration = include __DIR__.'/../database/migrations/2024_11_01_000001_create_ticket_levels_table.php';
-        $migration->up();
-
-        $migration = include __DIR__.'/../database/migrations/2024_11_01_000002_create_departments_table.php';
-        $migration->up();
-
-        $migration = include __DIR__.'/../database/migrations/2024_11_01_000003_create_tickets_table.php';
-        $migration->up();
-
-        $migration = include __DIR__.'/../database/migrations/2024_11_01_000004_create_ticket_assignments_table.php';
-        $migration->up();
-
-        $migration = include __DIR__.'/../database/migrations/2024_11_01_000005_create_escalation_requests_table.php';
-        $migration->up();
-
-        $migration = include __DIR__.'/../database/migrations/2024_11_01_000006_create_ticket_evaluations_table.php';
-        $migration->up();
-
-        $migration = include __DIR__.'/../database/migrations/2024_11_01_000007_create_agent_ratings_table.php';
-        $migration->up();
-
-        $migration = include __DIR__.'/../database/migrations/2024_11_01_000008_create_risk_assessments_table.php';
-        $migration->up();
-
-        $migration = include __DIR__.'/../database/migrations/2026_05_13_000001_create_ticket_attachments_table.php';
-        $migration->up();
-
-        $migration = include __DIR__.'/../database/migrations/2026_05_20_000001_create_ticket_messages_table.php';
-        $migration->up();
-
-        $migration = include __DIR__.'/../database/migrations/2026_05_21_000001_add_mailbox_email_to_departments_table.php';
-        $migration->up();
-
-        $migration = include __DIR__.'/../database/migrations/2026_05_25_000001_add_head_user_id_to_departments_table.php';
-        $migration->up();
-
-        $migration = include __DIR__.'/../database/migrations/2026_06_27_000001_make_escalation_requests_requester_id_nullable.php';
-        $migration->up();
     }
 }
