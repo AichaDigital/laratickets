@@ -8,6 +8,7 @@ use AichaDigital\Laratickets\Contracts\TicketAuthorizationContract;
 use AichaDigital\Laratickets\Enums\MessageAuthorRole;
 use AichaDigital\Laratickets\Enums\MessageVisibility;
 use AichaDigital\Laratickets\Events\TicketMessagePosted;
+use AichaDigital\Laratickets\Events\TicketMessageRedacted;
 use AichaDigital\Laratickets\Exceptions\TicketAuthorizationException;
 use AichaDigital\Laratickets\Exceptions\TicketMessageRejected;
 use AichaDigital\Laratickets\Exceptions\TicketStateException;
@@ -101,6 +102,8 @@ class TicketMessageService
         $message->redacted_by = ActorId::of($by);
         $message->redaction_reason = $reason;
         $message->save();
+
+        event(new TicketMessageRedacted($message));
 
         return $message->fresh();
     }

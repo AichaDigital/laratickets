@@ -6,8 +6,10 @@ namespace AichaDigital\Laratickets\Services;
 
 use AichaDigital\Laratickets\Contracts\TicketAuthorizationContract;
 use AichaDigital\Laratickets\Enums\TicketStatus;
+use AichaDigital\Laratickets\Events\TicketCancelled;
 use AichaDigital\Laratickets\Events\TicketClosed;
 use AichaDigital\Laratickets\Events\TicketCreated;
+use AichaDigital\Laratickets\Events\TicketResolved;
 use AichaDigital\Laratickets\Events\TicketStatusChanged;
 use AichaDigital\Laratickets\Exceptions\TicketAuthorizationException;
 use AichaDigital\Laratickets\Models\Ticket;
@@ -54,7 +56,12 @@ class TicketService
     }
 
     /**
-     * Update ticket status
+     * Update ticket status.
+     *
+     * D1 (ADR-004): terminal targets delegate to the dedicated apply* methods
+     * so they emit their specific event (and set the right metadata) — never
+     * TicketStatusChanged. This keeps the anti-duplicate invariant with a single
+     * entry point and is transparent to callers that close via this generic path.
      *
      * @param  mixed  $by  User model instance (type is configurable via config('laratickets.user.model'))
      */
@@ -64,21 +71,20 @@ class TicketService
             throw new TicketAuthorizationException('User is not authorized to update this ticket');
         }
 
-        $oldStatus = $ticket->status;
-
-        if ($oldStatus === $newStatus) {
+        if ($ticket->status === $newStatus) {
             return $ticket;
         }
 
-        $ticket->update(['status' => $newStatus]);
-
-        event(new TicketStatusChanged($ticket, $oldStatus, $newStatus));
-
-        return $ticket->fresh();
+        return match ($newStatus) {
+            TicketStatus::RESOLVED => $this->applyResolve($ticket, $by),
+            TicketStatus::CLOSED => $this->applyClose($ticket, $by),
+            TicketStatus::CANCELLED => $this->applyCancel($ticket, $by),
+            default => $this->applyStatusChange($ticket, $newStatus),
+        };
     }
 
     /**
-     * Close a ticket
+     * Close a ticket.
      *
      * @param  mixed  $by  User model instance (type is configurable via config('laratickets.user.model'))
      */
@@ -88,24 +94,11 @@ class TicketService
             throw new TicketAuthorizationException('User is not authorized to close this ticket');
         }
 
-        return DB::transaction(function () use ($ticket, $by) {
-            $ticket->update([
-                'status' => TicketStatus::CLOSED,
-                'closed_at' => now(),
-                'resolved_by' => ActorId::of($by),
-            ]);
-
-            // Complete all active assignments
-            $ticket->activeAssignments()->update(['completed_at' => now()]);
-
-            event(new TicketClosed($ticket));
-
-            return $ticket->fresh();
-        });
+        return $this->applyClose($ticket, $by);
     }
 
     /**
-     * Resolve a ticket
+     * Resolve a ticket.
      *
      * @param  mixed  $by  User model instance (type is configurable via config('laratickets.user.model'))
      */
@@ -115,19 +108,11 @@ class TicketService
             throw new TicketAuthorizationException('User is not authorized to resolve this ticket');
         }
 
-        $ticket->update([
-            'status' => TicketStatus::RESOLVED,
-            'resolved_at' => now(),
-            'resolved_by' => ActorId::of($by),
-        ]);
-
-        return $ticket->fresh();
+        return $this->applyResolve($ticket, $by);
     }
 
     /**
-     * Cancel a ticket
-     *
-     * Uses database transaction for atomicity.
+     * Cancel a ticket.
      *
      * @param  mixed  $by  User model instance (type is configurable via config('laratickets.user.model'))
      */
@@ -137,14 +122,74 @@ class TicketService
             throw new TicketAuthorizationException('User is not authorized to cancel this ticket');
         }
 
-        return DB::transaction(function () use ($ticket) {
+        return $this->applyCancel($ticket, $by);
+    }
+
+    /**
+     * Non-terminal status change: the only path that emits TicketStatusChanged.
+     */
+    private function applyStatusChange(Ticket $ticket, TicketStatus $newStatus): Ticket
+    {
+        $oldStatus = $ticket->status;
+
+        $ticket->update(['status' => $newStatus]);
+
+        event(new TicketStatusChanged($ticket, $oldStatus, $newStatus));
+
+        return $ticket->fresh();
+    }
+
+    /**
+     * @param  mixed  $by
+     */
+    private function applyResolve(Ticket $ticket, $by): Ticket
+    {
+        $ticket->update([
+            'status' => TicketStatus::RESOLVED,
+            'resolved_at' => now(),
+            'resolved_by' => ActorId::of($by),
+        ]);
+
+        event(new TicketResolved($ticket));
+
+        return $ticket->fresh();
+    }
+
+    /**
+     * @param  mixed  $by
+     */
+    private function applyClose(Ticket $ticket, $by): Ticket
+    {
+        return DB::transaction(function () use ($ticket, $by) {
+            $ticket->update([
+                'status' => TicketStatus::CLOSED,
+                'closed_at' => now(),
+                'resolved_by' => ActorId::of($by),
+            ]);
+
+            $ticket->activeAssignments()->update(['completed_at' => now()]);
+
+            event(new TicketClosed($ticket));
+
+            return $ticket->fresh();
+        });
+    }
+
+    /**
+     * @param  mixed  $by
+     */
+    private function applyCancel(Ticket $ticket, $by): Ticket
+    {
+        return DB::transaction(function () use ($ticket, $by) {
             $ticket->update([
                 'status' => TicketStatus::CANCELLED,
                 'closed_at' => now(),
+                'resolved_by' => ActorId::of($by),
             ]);
 
-            // Complete all active assignments
             $ticket->activeAssignments()->update(['completed_at' => now()]);
+
+            event(new TicketCancelled($ticket));
 
             return $ticket->fresh();
         });

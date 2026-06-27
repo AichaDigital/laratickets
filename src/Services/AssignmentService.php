@@ -52,7 +52,7 @@ class AssignmentService
         }
 
         /** @var TicketAssignment $result */
-        $result = DB::transaction(function () use ($ticket, $agent): TicketAssignment {
+        $result = DB::transaction(function () use ($ticket, $agent, $by): TicketAssignment {
             // Check if already assigned
             /** @var TicketAssignment|null $existing */
             $existing = $ticket->activeAssignments()
@@ -74,7 +74,7 @@ class AssignmentService
                 $ticket->update(['status' => TicketStatus::ASSIGNED]);
             }
 
-            event(new TicketAssigned($ticket, $agent));
+            event(new TicketAssigned($ticket, $agent, $by));
 
             return $assignment;
         });
