@@ -106,9 +106,10 @@ return [
     |
     */
     'evaluation' => [
-        'enabled' => env('LARATICKETS_EVALUATION_ENABLED', true),
+        // @experimental (ADR-004): OFF by default in v1.0.
+        'enabled' => env('LARATICKETS_EVALUATION_ENABLED', false),
         'required_on_close' => env('LARATICKETS_EVALUATION_REQUIRED', false),
-        'agent_rating_enabled' => env('LARATICKETS_AGENT_RATING_ENABLED', true),
+        'agent_rating_enabled' => env('LARATICKETS_AGENT_RATING_ENABLED', false),
         'min_score' => 1.0,
         'max_score' => 5.0,
     ],
@@ -122,7 +123,8 @@ return [
     |
     */
     'risk_assessment' => [
-        'enabled' => env('LARATICKETS_RISK_ASSESSMENT_ENABLED', true),
+        // @experimental (ADR-004): OFF by default in v1.0.
+        'enabled' => env('LARATICKETS_RISK_ASSESSMENT_ENABLED', false),
         'required_levels' => [3, 4],
         'auto_escalate_on_critical' => env('LARATICKETS_RISK_AUTO_ESCALATE', true),
     ],

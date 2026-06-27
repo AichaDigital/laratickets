@@ -18,6 +18,10 @@ use AichaDigital\Laratickets\Support\ActorId;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
+/**
+ * @experimental Opcional-experimental (ADR-004): off by default and outside the
+ *               v1.0 semver promise — may change or be removed without a major.
+ */
 class RiskAssessmentService
 {
     public function __construct(
