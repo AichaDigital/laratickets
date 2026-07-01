@@ -17,7 +17,7 @@
 [![Code Coverage](https://img.shields.io/codecov/c/github/AichaDigital/laratickets?style=flat-square)](https://codecov.io/gh/AichaDigital/laratickets)
 [![Total Downloads](https://img.shields.io/packagist/dt/aichadigital/laratickets.svg?style=flat-square)](https://packagist.org/packages/aichadigital/laratickets)
 
-A comprehensive support ticket management system for Laravel with 4-level escalation, risk assessment, evaluations, and full RESTful API.
+A comprehensive, UUID-first support ticket management system for Laravel with 4-level escalation, risk assessment, evaluations, and full RESTful API. General-purpose for any UUID-first Laravel application.
 
 ## Features
 
@@ -54,8 +54,16 @@ php artisan laratickets:install --seed
 
 This will:
 - Publish configuration file
-- Run migrations (8 tables)
+- Run migrations (10 tables)
 - Seed default levels (I-IV) and departments
+
+> **Migrations are package-managed.** Laratickets owns its database schema and
+> loads it from the package via `loadMigrationsFrom()`. The install command does
+> **not** copy migrations into your application, and applications should not
+> publish or edit the package migrations. User foreign keys require
+> UUID-compatible (`char(36)` UUID v7) user IDs. If you need custom schema
+> ownership, fork or request an extension point.
+> See [ADR-005](docs/ADR-005-package-managed-migrations.md).
 
 ## Configuration
 
