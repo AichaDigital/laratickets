@@ -8,7 +8,6 @@ use AichaDigital\Laratickets\Models\Department;
 use AichaDigital\Laratickets\Models\TicketLevel;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Schema;
 
 class InstallCommand extends Command
@@ -20,18 +19,6 @@ class InstallCommand extends Command
                           {--skip-uuid-check : Skip the users.id UUID preflight check}';
 
     protected $description = 'Install Laratickets package';
-
-    /** @var array<string, string> */
-    protected array $migrationOrder = [
-        '001' => 'create_ticket_levels_table',
-        '002' => 'create_departments_table',
-        '003' => 'create_tickets_table',
-        '004' => 'create_ticket_assignments_table',
-        '005' => 'create_escalation_requests_table',
-        '006' => 'create_ticket_evaluations_table',
-        '007' => 'create_agent_ratings_table',
-        '008' => 'create_risk_assessments_table',
-    ];
 
     public function handle(): int
     {
@@ -50,13 +37,8 @@ class InstallCommand extends Command
         ]);
         $this->info('✓ Configuration published');
 
-        // Publish migrations IN ORDER
-        $this->info('📄 Publishing migrations...');
-        $published = $this->publishMigrationsInOrder();
-
-        if ($published === 0) {
-            $this->comment('⚠ No new migrations to publish (use --force to overwrite)');
-        }
+        // Migrations are package-managed (loaded via loadMigrationsFrom in the
+        // ServiceProvider); the install command does not publish them. See ADR-005.
 
         // Run migrations if not --no-migrate
         if (! $this->option('no-migrate')) {
@@ -250,54 +232,6 @@ class InstallCommand extends Command
         } else {
             $this->warn('Departments already exist. Use --force to reseed.');
         }
-    }
-
-    protected function publishMigrationsInOrder(): int
-    {
-        $packagePath = dirname(__DIR__, 2).'/database/migrations';
-        $targetPath = database_path('migrations');
-        $timestamp = now();
-
-        $published = 0;
-
-        foreach ($this->migrationOrder as $order => $migrationName) {
-            $stubFiles = [
-                "{$packagePath}/{$migrationName}.php.stub",
-                "{$packagePath}/{$migrationName}.php",
-            ];
-
-            foreach (File::glob("{$packagePath}/????_??_??_??????_{$migrationName}.php*") as $file) {
-                $stubFiles[] = $file;
-            }
-
-            $stubFile = null;
-            foreach ($stubFiles as $file) {
-                if (File::exists($file)) {
-                    $stubFile = $file;
-                    break;
-                }
-            }
-
-            if (! $stubFile) {
-                $this->warn("⚠ Migration stub not found: {$migrationName}");
-
-                continue;
-            }
-
-            $migrationTimestamp = $timestamp->copy()->addSeconds((int) $order);
-            $targetFile = $targetPath.'/'.$migrationTimestamp->format('Y_m_d_His').'_'.$migrationName.'.php';
-
-            if (File::exists($targetFile) && ! $this->option('force')) {
-                continue;
-            }
-
-            File::copy($stubFile, $targetFile);
-            $published++;
-        }
-
-        $this->info("✓ Published {$published} migrations");
-
-        return $published;
     }
 
     protected function seedLevels(): void
