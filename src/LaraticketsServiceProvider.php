@@ -17,8 +17,13 @@ class LaraticketsServiceProvider extends PackageServiceProvider
     {
         parent::boot();
 
-        // Load migrations automatically (same pattern as larabill)
-        // Migrations use MigrationHelper for ID type agnosticism
+        // Migrations are package-managed: laratickets owns its schema and loads
+        // it from the package (no publishing). loadMigrationsFrom runs in every
+        // console context — production included — so the consumer's `migrate`
+        // discovers the package schema. Do NOT add a `! environment('production')`
+        // guard here: that guard only applies to packages that publish stubs
+        // (e.g. larabill). See ADR-005. User FKs are UUID v7 char(36) via
+        // MigrationHelper::userIdColumn() (STD-001).
         if ($this->app->runningInConsole()) {
             $this->loadMigrationsFrom(__DIR__.'/../database/migrations');
         }

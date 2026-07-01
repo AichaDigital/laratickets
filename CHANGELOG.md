@@ -2,6 +2,36 @@
 
 All notable changes to `laratickets` will be documented in this file.
 
+## [1.0.1] - 2026-07-01
+
+### Fixed
+
+- **Install path: retire the broken migration publishing (AID-290).** The
+  install command published migrations into the consumer app via
+  `$migrationOrder` + `publishMigrationsInOrder()`, but the ordered list was
+  incomplete (8 of 13 migrations — it omitted `ticket_attachments`,
+  `ticket_messages` and 3 alters), so the published schema was partial. The
+  package already auto-loads its full schema via `loadMigrationsFrom()`, so
+  publishing was a second, broken origin of schema that could also collide with
+  auto-load (`table already exists`). Migrations are now **package-managed**:
+  `laratickets:install` no longer copies migrations. See
+  `docs/ADR-005-package-managed-migrations.md`.
+
+### Changed
+
+- `laratickets:install` keeps the preflight UUID check, config publish, optional
+  `migrate` and seed — it just no longer publishes migrations.
+- `LaraticketsServiceProvider` documents that it loads migrations in every
+  console context, production included (no `production` guard — the package owns
+  its schema and the consumer's `migrate` must discover it).
+
+### Upgrade note
+
+If you ran `laratickets:install` on v1.0.0 and it copied laratickets migrations
+into your `database/migrations`, **delete those copies before migrating** —
+migrations are now package-managed and auto-loaded; keeping the copies would
+cause double execution (`table already exists`).
+
 ## [1.0.0] - 2026-06-27
 
 First stability boundary — the public contract is frozen. v1.0 seals the parts
