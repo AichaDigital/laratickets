@@ -2,6 +2,25 @@
 
 All notable changes to `laratickets` will be documented in this file.
 
+## [1.1.0] - 2026-07-10
+
+### Added
+
+- **Model factories for every testable model (AID-362).** `TicketFactory`,
+  `TicketLevelFactory`, `DepartmentFactory`, `TicketAssignmentFactory`,
+  `TicketAttachmentFactory`, `TicketEvaluationFactory`, `AgentRatingFactory` and
+  `EscalationRequestFactory`, each with an explicit `newFactory()` on its model
+  so `Model::factory()` resolves in any consumer without configuring
+  `Factory::guessFactoryNamesUsing()`. Package FK chains (`ticket_id`,
+  `from_level_id`, `to_level_id`) auto-resolve via nested factories; user
+  columns (UUID, no FK to the consumer's users table) default to a generated
+  UUID v7. States: `TicketAssignment` `completed()`/`active()`;
+  `TicketAttachment` `client()`/`staff()`/`image()`; `TicketEvaluation` &
+  `AgentRating` `highRated()`/`lowRated()`; `EscalationRequest`
+  `approved()`/`rejected()`/`automatic()`; `Ticket` `resolved()`/`closed()`;
+  plus small ergonomic helpers. Consumers can now drop hand-rolled
+  `Model::create([...])` in their test suites.
+
 ## [1.0.1] - 2026-07-01
 
 ### Fixed

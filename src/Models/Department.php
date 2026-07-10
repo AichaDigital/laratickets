@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace AichaDigital\Laratickets\Models;
 
+use AichaDigital\Laratickets\Database\Factories\DepartmentFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -22,6 +23,7 @@ use Illuminate\Support\Carbon;
  */
 class Department extends Model
 {
+    /** @use HasFactory<DepartmentFactory> */
     use HasFactory;
 
     protected $fillable = [
@@ -35,6 +37,11 @@ class Department extends Model
     protected $casts = [
         'active' => 'boolean',
     ];
+
+    protected static function newFactory(): DepartmentFactory
+    {
+        return DepartmentFactory::new();
+    }
 
     /**
      * @return HasMany<Ticket, Department>
