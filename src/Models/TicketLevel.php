@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace AichaDigital\Laratickets\Models;
 
+use AichaDigital\Laratickets\Database\Factories\TicketLevelFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -23,6 +24,7 @@ use Illuminate\Support\Carbon;
  */
 class TicketLevel extends Model
 {
+    /** @use HasFactory<TicketLevelFactory> */
     use HasFactory;
 
     protected $fillable = [
@@ -42,6 +44,11 @@ class TicketLevel extends Model
         'default_sla_hours' => 'integer',
         'active' => 'boolean',
     ];
+
+    protected static function newFactory(): TicketLevelFactory
+    {
+        return TicketLevelFactory::new();
+    }
 
     /**
      * @return HasMany<Ticket, TicketLevel>

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace AichaDigital\Laratickets\Models;
 
 use AichaDigital\Laratickets\Concerns\HasUserRelation;
+use AichaDigital\Laratickets\Database\Factories\EscalationRequestFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -34,7 +35,9 @@ use Illuminate\Support\Carbon;
  */
 class EscalationRequest extends Model
 {
+    /** @use HasFactory<EscalationRequestFactory> */
     use HasFactory;
+
     use HasUserRelation;
 
     /**
@@ -63,6 +66,11 @@ class EscalationRequest extends Model
         'requested_at' => 'datetime',
         'resolved_at' => 'datetime',
     ];
+
+    protected static function newFactory(): EscalationRequestFactory
+    {
+        return EscalationRequestFactory::new();
+    }
 
     /**
      * @return BelongsTo<Ticket, EscalationRequest>

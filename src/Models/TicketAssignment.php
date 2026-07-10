@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace AichaDigital\Laratickets\Models;
 
 use AichaDigital\Laratickets\Concerns\HasUserRelation;
+use AichaDigital\Laratickets\Database\Factories\TicketAssignmentFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -25,7 +26,9 @@ use Illuminate\Support\Carbon;
  */
 class TicketAssignment extends Model
 {
+    /** @use HasFactory<TicketAssignmentFactory> */
     use HasFactory;
+
     use HasUserRelation;
 
     /**
@@ -48,6 +51,11 @@ class TicketAssignment extends Model
         'completed_at' => 'datetime',
         'individual_rating' => 'decimal:2',
     ];
+
+    protected static function newFactory(): TicketAssignmentFactory
+    {
+        return TicketAssignmentFactory::new();
+    }
 
     /**
      * @return BelongsTo<Ticket, TicketAssignment>

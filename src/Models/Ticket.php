@@ -6,6 +6,7 @@ namespace AichaDigital\Laratickets\Models;
 
 use AichaDigital\Laratickets\Concerns\HasUserRelation;
 use AichaDigital\Laratickets\Concerns\HasUuid;
+use AichaDigital\Laratickets\Database\Factories\TicketFactory;
 use AichaDigital\Laratickets\Enums\MessageVisibility;
 use AichaDigital\Laratickets\Enums\Priority;
 use AichaDigital\Laratickets\Enums\RiskLevel;
@@ -53,7 +54,9 @@ use Illuminate\Support\Carbon;
  */
 class Ticket extends Model
 {
+    /** @use HasFactory<TicketFactory> */
     use HasFactory;
+
     use HasUserRelation;
     use HasUuid;
     use SoftDeletes;
@@ -110,6 +113,11 @@ class Ticket extends Model
         'resolved_at' => 'datetime',
         'closed_at' => 'datetime',
     ];
+
+    protected static function newFactory(): TicketFactory
+    {
+        return TicketFactory::new();
+    }
 
     // Relationships
     /**

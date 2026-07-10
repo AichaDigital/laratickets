@@ -6,6 +6,7 @@ namespace AichaDigital\Laratickets\Models;
 
 use AichaDigital\Laratickets\Concerns\HasUserRelation;
 use AichaDigital\Laratickets\Concerns\HasUuid;
+use AichaDigital\Laratickets\Database\Factories\TicketAttachmentFactory;
 use AichaDigital\Laratickets\Enums\AttachmentUploaderRole;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -29,7 +30,9 @@ use Illuminate\Support\Carbon;
  */
 class TicketAttachment extends Model
 {
+    /** @use HasFactory<TicketAttachmentFactory> */
     use HasFactory;
+
     use HasUserRelation;
     use HasUuid;
 
@@ -53,6 +56,11 @@ class TicketAttachment extends Model
         'uploader_role' => AttachmentUploaderRole::class,
         'size_bytes' => 'integer',
     ];
+
+    protected static function newFactory(): TicketAttachmentFactory
+    {
+        return TicketAttachmentFactory::new();
+    }
 
     /**
      * @return BelongsTo<Ticket, TicketAttachment>

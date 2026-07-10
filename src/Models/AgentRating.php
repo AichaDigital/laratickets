@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace AichaDigital\Laratickets\Models;
 
 use AichaDigital\Laratickets\Concerns\HasUserRelation;
+use AichaDigital\Laratickets\Database\Factories\AgentRatingFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -26,7 +27,9 @@ use Illuminate\Support\Carbon;
  */
 class AgentRating extends Model
 {
+    /** @use HasFactory<AgentRatingFactory> */
     use HasFactory;
+
     use HasUserRelation;
 
     /**
@@ -47,6 +50,11 @@ class AgentRating extends Model
     protected $casts = [
         'score' => 'decimal:2',
     ];
+
+    protected static function newFactory(): AgentRatingFactory
+    {
+        return AgentRatingFactory::new();
+    }
 
     /**
      * @return BelongsTo<Ticket, AgentRating>
