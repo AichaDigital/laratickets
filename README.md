@@ -1,4 +1,20 @@
 # Laratickets - Advanced Support Ticket System for Laravel
+<!-- AI-BADGES:START profile=essential -->
+[![Latest Version](https://img.shields.io/packagist/v/aichadigital/laratickets.svg?style=flat-square)](https://packagist.org/packages/aichadigital/laratickets)
+[![Total Downloads](https://img.shields.io/packagist/dt/aichadigital/laratickets.svg?style=flat-square)](https://packagist.org/packages/aichadigital/laratickets)
+[![Pipeline](https://gitlab.castris.com/aichadigital/laratickets/badges/main/pipeline.svg?style=flat-square)](https://gitlab.castris.com/aichadigital/laratickets/-/pipelines)
+[![Coverage](https://gitlab.castris.com/aichadigital/laratickets/badges/main/coverage.svg?style=flat-square)](https://gitlab.castris.com/aichadigital/laratickets/-/pipelines)
+[![PHPStan level 6](https://img.shields.io/badge/PHPStan-level%206-green.svg?style=flat-square&logo=php)](https://phpstan.org/)
+[![PHP Version](https://img.shields.io/packagist/php-v/aichadigital/laratickets.svg?style=flat-square&logo=php)](https://packagist.org/packages/aichadigital/laratickets)
+[![Laravel Version](https://img.shields.io/badge/Laravel-12.x%20%7C%2013.x-red.svg?style=flat-square&logo=laravel)](https://laravel.com)
+[![License](https://img.shields.io/packagist/l/aichadigital/laratickets.svg?style=flat-square)](https://packagist.org/packages/aichadigital/laratickets)
+<!-- AI-BADGES:END -->
+
+> Development happens on
+> [gitlab.castris.com](https://gitlab.castris.com/aichadigital/laratickets).
+> The GitHub repository is a read-only distribution mirror: issues and pull
+> requests opened there are not seen.
+
 
 > **v1.0 — stable contract.** The public contract is frozen as of v1.0.0
 > (see [`docs/ADR-004-v1.0-contract.md`](docs/ADR-004-v1.0-contract.md)).
