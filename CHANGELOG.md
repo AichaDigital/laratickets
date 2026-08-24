@@ -2,6 +2,92 @@
 
 All notable changes to `laratickets` will be documented in this file.
 
+## [1.2.0] - 2026-08-24
+
+### Fixed
+
+- **Tickets can no longer be filed into, or moved into, a retired department
+  (AID-1085).** `Department::scopeActive()` shipped with v1.0 and had **zero
+  callers**: `TicketService::createTicket()` wrote `department_id` unchecked, and
+  both `StoreTicketRequest` and `UpdateTicketRequest` validated it with a bare
+  `exists:departments,id`. Every write path the package owns — including its own
+  REST API at `POST /api/v1/laratickets/tickets` and `PATCH
+  /api/v1/laratickets/tickets/{ticket}` — accepted a department the operator had
+  taken out of service. `UpdateTicketRequest` was the sharper half: a ticket
+  could be **moved into** a retired department. The service now throws
+  `InactiveDepartmentException`; the requests fail validation on `department_id`.
+
+### Changed
+
+- **BEHAVIOUR CHANGE — read this before upgrading.** This release changes what
+  the package does by default. It is a correction of an invariant the package
+  always implied but never enforced, shipped with a reversible compatibility
+  path rather than as a breaking release; the SemVer risk of changing a default
+  is real and is not dissolved by that reasoning. If your application
+  deliberately routes tickets into a department flagged `active = false` — to
+  hide it from your own UI while still accepting traffic through the API, for
+  instance — that flow **stops working on upgrade** until you switch enforcement
+  off.
+
+- **The escape hatch:** `laratickets.departments.enforce_active` (env
+  `LARATICKETS_DEPARTMENTS_ENFORCE_ACTIVE`), default `true`. Setting it to
+  `false` restores the pre-1.2.0 behaviour on every write path at once — create
+  and update alike.
+
+  **If you have published `config/laratickets.php`, read this paragraph.**
+  `mergeConfigFrom()` is a shallow `array_merge`, so your published
+  `departments` block replaces the package's entirely and the new key is simply
+  absent for you. It is therefore read as
+  `config('laratickets.departments.enforce_active', true)`, at the point of use:
+  the safe default applies to you regardless, and an old published config will
+  **not** silently disable the guard. The consequence runs the other way — to
+  turn enforcement **off** you must add the key to your own published file by
+  hand; re-publishing the package config is not required and copying ours over
+  yours would overwrite your customisations.
+
+- **Validation message.** `department_id.exists` now reads *"The selected
+  department is not available"* instead of *"The selected department does not
+  exist"*, which became a lie the moment the rule started rejecting departments
+  that exist but are retired. The message key is unchanged, so an override in
+  your own translations keeps working.
+
+- **Update is deliberately narrower than create.** With enforcement on, an
+  update rejects a **new** assignment to a retired department but still accepts
+  a ticket that is **already in one**, so a historical ticket stays editable — a
+  client resubmitting a whole form sends its current department back unchanged,
+  and refusing it would block unrelated edits such as fixing the subject.
+  Forbidding that permanence as well is a data question (inventory and
+  migration), not a validation one, and is out of scope here.
+
+### Added
+
+- `AichaDigital\Laratickets\Exceptions\InactiveDepartmentException`, extending
+  the existing `TicketException` (and therefore `RuntimeException`, so current
+  `catch (\RuntimeException)` call sites keep working). Consumers typically map
+  it to HTTP 422.
+- `AichaDigital\Laratickets\Support\DepartmentEligibility`, the single place
+  that answers whether a department may receive a ticket. Any future package
+  service that writes `department_id` must go through it.
+
+### Scope and limits — stated rather than glossed
+
+- **Direct Eloquent writes are not intercepted.** The guard covers the write
+  points the package owns and supports: `TicketService::createTicket()`,
+  `StoreTicketRequest` and `UpdateTicketRequest`. A consumer calling
+  `$ticket->update(['department_id' => ...])`, or a mass update by query, is
+  outside the contract and stays its own responsibility. A model observer was
+  considered and rejected: it would turn a contractual validation into a silent
+  global restriction over seeders, imports and data repairs, and would still
+  miss query-builder updates.
+- **This is a check, not a lock.** A department disabled between the check and
+  the write still lets that one ticket through. Closing that window is a
+  separate concern from the contract fixed here.
+- **The real-world impact of this change was not measured.** Whether any
+  inactive department exists in any environment today, or receives traffic, was
+  not established — the column defaults to `true`, so only a department
+  deliberately deactivated is affected, but that is an argument about the likely
+  blast radius, not evidence that it is empty.
+
 ## [1.1.0] - 2026-07-10
 
 ### Added
