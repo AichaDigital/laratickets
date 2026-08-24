@@ -15,6 +15,7 @@ use AichaDigital\Laratickets\Exceptions\TicketAuthorizationException;
 use AichaDigital\Laratickets\Models\Ticket;
 use AichaDigital\Laratickets\Models\TicketLevel;
 use AichaDigital\Laratickets\Support\ActorId;
+use AichaDigital\Laratickets\Support\DepartmentEligibility;
 use Illuminate\Support\Facades\DB;
 
 class TicketService
@@ -36,6 +37,8 @@ class TicketService
         }
 
         return DB::transaction(function () use ($data, $by) {
+            DepartmentEligibility::assert($data['department_id']);
+
             $levelOne = TicketLevel::where('level', 1)->firstOrFail();
 
             $ticket = Ticket::create([

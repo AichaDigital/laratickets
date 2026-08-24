@@ -88,8 +88,22 @@ return [
     |
     | Default departments for ticket categorization.
     |
+    | `enforce_active` (AID-1085, since 1.2.0): reject tickets filed into — or
+    | moved into — a department whose `active` flag is false. Before 1.2.0 every
+    | write path accepted a retired department. Set it to false to restore that
+    | behaviour if a flow of yours routes into a department hidden from the UI.
+    |
+    | NOTE for upgrades: this key is only read through
+    | `config('laratickets.departments.enforce_active', true)`, so publishing an
+    | older copy of this file does NOT silently disable the guard — the default
+    | applies wherever the key is absent. `mergeConfigFrom()` is a shallow
+    | array_merge, so your published `departments` block replaces ours entirely
+    | and you must add the key here yourself to turn enforcement OFF.
+    |
     */
     'departments' => [
+        'enforce_active' => env('LARATICKETS_DEPARTMENTS_ENFORCE_ACTIVE', true),
+
         'default' => [
             ['name' => 'Technical', 'description' => 'Technical support department'],
             ['name' => 'Administrative', 'description' => 'Administrative support department'],

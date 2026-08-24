@@ -107,6 +107,38 @@ return [
 ];
 ```
 
+### Department eligibility (since 1.2.0)
+
+Tickets cannot be filed into — or moved into — a department flagged
+`active = false`. `TicketService::createTicket()` throws
+`InactiveDepartmentException`, and `StoreTicketRequest` / `UpdateTicketRequest`
+fail validation on `department_id`.
+
+Before 1.2.0 every write path accepted a retired department. If a flow of yours
+relies on that, switch enforcement off:
+
+```php
+// config/laratickets.php
+'departments' => [
+    'enforce_active' => false, // or LARATICKETS_DEPARTMENTS_ENFORCE_ACTIVE=false
+],
+```
+
+Two things worth knowing:
+
+- **If you published `config/laratickets.php` before 1.2.0**, your `departments`
+  block replaces the package's (`mergeConfigFrom()` is a shallow `array_merge`),
+  so the new key is absent for you. It is read as
+  `config('laratickets.departments.enforce_active', true)`, so the safe default
+  still applies — but to turn enforcement **off** you must add the key to your
+  own file by hand.
+- **Update is narrower than create.** A ticket already sitting in a department
+  that was later retired stays editable; only a *new* assignment to a retired
+  department is rejected.
+
+Writes that bypass the package — `$ticket->update([...])` in raw Eloquent, or a
+mass update by query — are outside this guard by design.
+
 ## Basic Usage
 
 ### Creating a Ticket
