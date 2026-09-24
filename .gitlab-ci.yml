@@ -69,6 +69,20 @@ manifest:
   script:
     - composer validate --strict --no-interaction
 
+# House rule: a repo with CI carries an `audit` job that goes red on any
+# dependency advisory — enforcement lives in the tooling, not in a note.
+# It extends .php so dependencies are resolved first: the package tracks no
+# composer.lock (library policy), and auditing a stale vendor would measure
+# the runner cache instead of the resolvable set.
+audit:
+  stage: quality
+  image: aichadigital/laravel-ci:8.3
+  variables:
+    PHP_VERSION: "8.3"
+  extends: .php
+  script:
+    - composer audit
+
 pint:
   stage: quality
   image: aichadigital/laravel-ci:8.3
