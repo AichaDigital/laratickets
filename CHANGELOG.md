@@ -2,6 +2,38 @@
 
 All notable changes to `laratickets` will be documented in this file.
 
+## [1.3.0] - 2026-09-24
+
+### Fixed
+
+- **Package-generated identifiers are now real UUID v7, not v4 COMBs
+  (AID-1420).** `HasUuid` — the primary key generator of `Ticket`,
+  `TicketMessage` and `TicketAttachment` — and `AttachmentService` (the
+  stored attachment filename) built their identifiers with
+  `Str::orderedUuid()`, under a comment claiming "UUID v7 (ordered)".
+  `Str::orderedUuid()` is a **v4 COMB**: time-ordered bytes, but the version
+  nibble reads 4. On MariaDB >= 10.7, whose native `uuid` column stores only
+  version >= 6 identifiers in order, those keys were persisted with their
+  segments reversed, so `ORDER BY id` compared the random tail first and the
+  insertion locality that justifies an ordered id was lost (the flaky search
+  ordering of AID-1020 was this bug surfacing in a consumer). Both call sites
+  now use `Str::uuid7()`, and a test pins the version nibble so a regression
+  to a v4 generator goes red.
+
+### Changed
+
+- **BEHAVIOUR CHANGE — read this before upgrading.** Only rows created after
+  this release carry v7 keys. **Existing identifiers are not migrated and not
+  touched**: they are primary keys referenced by foreign keys, and nothing in
+  the package parses the version nibble. What changes is the ordering
+  behaviour of NEW keys — a column mixing old v4 COMBs with new v7 keys does
+  not share one monotonic sequence, so listings sorted by id may reorder once
+  after the upgrade. Id ordering was never contractual (`created_at` is), but
+  it is visible. Shipped as a minor, like v1.2.0: this restores a semantic
+  the package already published (README, `docs/Laratickets.md` and ADR-001
+  all promise UUID v7) rather than redefining one, but the default behaviour
+  changes and that SemVer risk is not dissolved by the reasoning.
+
 ## [1.2.0] - 2026-08-24
 
 ### Fixed
