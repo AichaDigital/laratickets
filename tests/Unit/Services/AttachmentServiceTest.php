@@ -85,6 +85,16 @@ describe('AttachmentService::attach', function () {
         Event::assertDispatched(AttachmentUploaded::class);
     });
 
+    it('names the stored file after a v7 UUID (AID-1420)', function () {
+        $file = UploadedFile::fake()->create('report.pdf', 100, 'application/pdf');
+
+        $att = $this->service->attach($this->ticket, $this->uploader, $file, AttachmentUploaderRole::CLIENT);
+
+        $storedUuid = pathinfo(basename($att->path), PATHINFO_FILENAME);
+
+        expect($storedUuid[14])->toBe('7');
+    });
+
     it('rejects when authorization denies', function () {
         $this->authorization = Mockery::mock(TicketAuthorizationContract::class);
         $this->authorization->shouldReceive('canAttachFile')->andReturn(false);

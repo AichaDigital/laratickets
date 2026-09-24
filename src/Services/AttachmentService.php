@@ -59,7 +59,8 @@ class AttachmentService
         $disk = (string) config('laratickets.attachments.disk', 'local');
         $basePath = trim((string) config('laratickets.attachments.path', 'ticket-attachments'), '/');
 
-        $uuid = (string) Str::orderedUuid();
+        // Real UUID v7 (AID-1420): Str::orderedUuid() is a v4 COMB despite the name.
+        $uuid = (string) Str::uuid7();
         $extension = strtolower($file->getClientOriginalExtension() ?: $this->extensionFromMime($file->getMimeType() ?? ''));
         $storedName = $extension !== '' ? "$uuid.$extension" : $uuid;
         $relativePath = "$basePath/{$ticket->id}/$storedName";

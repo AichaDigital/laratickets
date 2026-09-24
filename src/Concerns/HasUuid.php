@@ -9,7 +9,10 @@ use Illuminate\Support\Str;
 /**
  * Agnostic UUID trait for Eloquent models.
  *
- * Uses Laravel 12 native UUID v7 (ordered) generation for optimal performance.
+ * Generates real UUID v7 keys via Str::uuid7() (STD-001, ADR-001). Do NOT
+ * swap in Str::orderedUuid(): it is a v4 COMB — time-ordered bytes, but the
+ * version nibble reads 4 — so it breaks the v7 key contract this package
+ * publishes (AID-1420).
  * The trait configures the model to use UUID as primary key.
  *
  * Note: uuid_binary was removed in v1.0 due to incompatibility with FilamentPHP v4.
@@ -32,8 +35,8 @@ trait HasUuid
             $keyName = $model->getKeyName();
 
             if (empty($model->{$keyName})) {
-                // Generate UUID v7 (ordered) for better index performance
-                $model->{$keyName} = (string) Str::orderedUuid();
+                // Real UUID v7: time-ordered bytes AND version nibble 7 (AID-1420).
+                $model->{$keyName} = (string) Str::uuid7();
             }
         });
     }
