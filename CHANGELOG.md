@@ -2,6 +2,12 @@
 
 All notable changes to `laratickets` will be documented in this file.
 
+## [Unreleased]
+
+### Fixed
+
+- **Deleting an attachment no longer leaves an orphan file when the storage fails silently (AID-2168).** `AttachmentService::delete()` ignored the boolean returned by `Storage::delete()` and removed the `TicketAttachment` row unconditionally, so a disk that failed without throwing kept the file with no row pointing to it. The row is now removed only once the file is gone; otherwise it is kept and a `TicketStateException` is thrown. A `false` return for a file that is already missing still removes the row.
+
 ## [1.3.0] - 2026-09-24
 
 ### Fixed

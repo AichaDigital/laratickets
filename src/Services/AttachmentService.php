@@ -94,6 +94,10 @@ class AttachmentService
     /**
      * Borra el attachment (BD + archivo físico).
      *
+     * The row is removed only once the file is gone from the disk. A storage
+     * that fails without throwing (delete() returns false) keeps the row, so
+     * the file never becomes an orphan (AID-2168).
+     *
      * @param  mixed  $by  User model instance
      *
      * @throws TicketException
@@ -104,7 +108,12 @@ class AttachmentService
             throw new TicketAuthorizationException('User is not authorized to delete this attachment.');
         }
 
-        Storage::disk($attachment->disk)->delete($attachment->path);
+        $disk = Storage::disk($attachment->disk);
+
+        if (! $disk->delete($attachment->path) && $disk->exists($attachment->path)) {
+            throw new TicketStateException("Attachment file could not be deleted from disk [{$attachment->disk}]; the attachment was kept.");
+        }
+
         $attachment->delete();
     }
 
