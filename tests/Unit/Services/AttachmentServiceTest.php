@@ -156,6 +156,38 @@ describe('AttachmentService::delete', function () {
         expect(TicketAttachment::find($att->id))->toBeNull();
     });
 
+    it('keeps the row and throws when the storage fails to delete the file without throwing (AID-2168)', function () {
+        $file = UploadedFile::fake()->create('a.pdf', 10, 'application/pdf');
+        $att = $this->service->attach($this->ticket, $this->uploader, $file, AttachmentUploaderRole::CLIENT);
+        $path = $att->path;
+
+        // Storage that reports failure (returns false) and leaves the file in place.
+        $failingDisk = Mockery::mock(Storage::disk('local'))->makePartial();
+        $failingDisk->shouldReceive('delete')->with($path)->andReturn(false);
+        Storage::set('local', $failingDisk);
+
+        expect(fn () => $this->service->delete($att, $this->uploader))
+            ->toThrow(TicketStateException::class, 'could not be deleted');
+
+        Storage::disk('local')->assertExists($path);
+        expect(TicketAttachment::find($att->id))->not->toBeNull();
+    });
+
+    it('removes the row when the storage returns false but the file is already gone (AID-2168)', function () {
+        $file = UploadedFile::fake()->create('a.pdf', 10, 'application/pdf');
+        $att = $this->service->attach($this->ticket, $this->uploader, $file, AttachmentUploaderRole::CLIENT);
+        $path = $att->path;
+        Storage::disk('local')->delete($path);
+
+        $failingDisk = Mockery::mock(Storage::disk('local'))->makePartial();
+        $failingDisk->shouldReceive('delete')->with($path)->andReturn(false);
+        Storage::set('local', $failingDisk);
+
+        $this->service->delete($att, $this->uploader);
+
+        expect(TicketAttachment::find($att->id))->toBeNull();
+    });
+
     it('rejects when authorization denies', function () {
         $file = UploadedFile::fake()->create('a.pdf', 10, 'application/pdf');
         $att = $this->service->attach($this->ticket, $this->uploader, $file, AttachmentUploaderRole::CLIENT);
